@@ -1,14 +1,12 @@
 <?php
-class Database
-{
+class Database {
     private $host = ""; 
     private $username = "";
     private $password = "";
     private $database = "";
     public $conn;
 
-    public function __construct()
-    {
+    public function __construct() {
         $this->conn = new mysqli($this->host, $this->username, $this->password, $this->database);
 
         if ($this->conn->connect_error) {
@@ -16,18 +14,15 @@ class Database
         }
     }
 
-    public function query($sql)
-    {
+    public function query($sql) {
         return $this->conn->query($sql);
     }
 
-    public function fetch_assoc($result)
-    {
+    public function fetch_assoc($result) {
         return $result->fetch_assoc();
     }
 
-    public function close()
-    {
+    public function close() {
         $this->conn->close();
     }
 }
