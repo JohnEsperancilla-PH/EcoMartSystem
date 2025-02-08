@@ -1,6 +1,3 @@
-<?php
-// Universal Header
-?>
 <nav class="navbar navbar-expand-lg" style="background-color: #d32f2f; padding: 10px;">
     <div class="container">
         <a class="navbar-brand text-white fw-bold" href="index.php">EcoMart</a>
