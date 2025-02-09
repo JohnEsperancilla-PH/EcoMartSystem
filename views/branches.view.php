@@ -1,4 +1,7 @@
-<?php include 'includes/header.php'; // Include universal header ?>
+<?php
+include 'includes/header.php'; // Include universal header
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,4 +28,5 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
 <?php include 'includes/footer.php'; // Include universal footer ?>

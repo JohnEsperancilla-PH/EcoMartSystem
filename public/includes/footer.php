@@ -19,8 +19,8 @@
                 <ul class="list-unstyled">
                     <li><a href="#" class="text-white text-decoration-none">My Account</a></li>
                     <li><a href="branches.php" class="text-white text-decoration-none">Store Locator</a></li>
-                    <li><a href="#" class="text-white text-decoration-none">Contact Us</a></li>
-                    <li><a href="#" class="text-white text-decoration-none">Privacy Policy</a></li>
+                    <li><a href="contact.php" class="text-white text-decoration-none">Contact Us</a></li>
+                    <li><a href="privacy-policy.php" class="text-white text-decoration-none">Privacy Policy</a></li>
                     <li><a href="terms.php" class="text-white text-decoration-none">Terms of Use</a></li>
                 </ul>
             </div>

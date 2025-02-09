@@ -23,6 +23,15 @@ switch ($page) {
     case 'branches':
         include '../views/branches.view.php';
         break;
+    case 'contact':
+        include '../views/contact.view.php';
+        break;
+    case 'privacy-policy':
+        include '../views/privacy-policy.view.php';
+        break;
+    case 'process-order':
+        include '../views/process-order.view.php';
+        break;
     default:
         include '../views/signup.view.php';
         break;
