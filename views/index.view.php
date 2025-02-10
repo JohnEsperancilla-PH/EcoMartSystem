@@ -1,18 +1,5 @@
-<?php
-include 'includes/header.php'; // Include universal header
-?>
+<?php include 'components/header.php'; ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoMart</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/styles.css">
-</head>
-
-<body>
 <div class="container mt-4">
     <!-- Home Image Carousel -->
     <div id="promotionCarousel" class="carousel slide" data-ride="carousel">
@@ -22,7 +9,7 @@ include 'includes/header.php'; // Include universal header
             </div>
         </div>
     </div>
-    
+
     <!-- What's New Section -->
     <h2 class="mt-4">What's New</h2>
     <div class="row">
@@ -57,7 +44,7 @@ include 'includes/header.php'; // Include universal header
             </div>
         </div>
     </div>
-    
+
     <!-- Advertisement Section -->
     <div id="promotionCarousel" class="carousel slide mt-4" data-ride="carousel">
         <div class="carousel-inner">
@@ -70,7 +57,7 @@ include 'includes/header.php'; // Include universal header
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
 
-
-<?php include 'includes/footer.php'; ?>
+<?php include 'components/footer.php'; ?>

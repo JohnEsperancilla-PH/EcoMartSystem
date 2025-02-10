@@ -1,9 +1,9 @@
 <?php
 class Database {
-    private $host = ""; 
-    private $username = "";
+    private $host = "localhost"; 
+    private $username = "root";
     private $password = "";
-    private $database = "";
+    private $database = "ecomart_db";
     public $conn;
 
     public function __construct() {
