@@ -1,5 +1,3 @@
 <?php
 
-// Load the signup page by default or implement routing logic
-include '../views/process-order.view.php';
-?>
+require_once __DIR__ . '/../views/client/process-order.view.php';

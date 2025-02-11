@@ -3,7 +3,7 @@ class RoleMiddleware {
     private $session;
     private $db;
 
-    public function __construct(Session $session, PDO $db) {
+    public function __construct(Session $session, mysqli $db) {
         $this->session = $session;
         $this->db = $db;
     }
@@ -16,10 +16,18 @@ class RoleMiddleware {
         }
 
         $stmt = $this->db->prepare('SELECT role FROM users WHERE id = ?');
-        $stmt->execute([$userId]);
-        $user = $stmt->fetch();
+        if (!$stmt) {
+            die("Prepare failed: " . $this->db->error);
+        }
 
-        if ($user['role'] !== $role) {
+
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $user = $result->fetch_assoc();
+        $stmt->close();
+
+        if (!$user || $user['role'] !== $role) {
             header('Location: /unauthorized');
             exit();
         }

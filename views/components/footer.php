@@ -1,7 +1,6 @@
-        <footer class="text-white py-4 mt-5" style="background-color: #d32f2f;">
+        <footer class="text-white py-4 mt-5">
             <div class="container">
                 <div class="row">
-                    <!-- Left Section -->
                     <div class="col-md-6">
                         <h5>EcoMart</h5>
                         <p>WC98+P3R, Quezon Boulevard, Malasiqui, 2421 Pangasinan</p>
@@ -13,7 +12,6 @@
                         </form>
                     </div>
 
-                    <!-- Right Section -->
                     <div class="col-md-6 text-md-end mt-4 mt-md-0">
                         <h6>Quick Links</h6>
                         <ul class="list-unstyled">

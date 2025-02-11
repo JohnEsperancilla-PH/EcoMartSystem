@@ -6,7 +6,7 @@ class AuthController
     private $validator;
     private $user;
 
-    public function __construct(PDO $db, Session $session, Validator $validator, User $user)
+    public function __construct(mysqli $db, Session $session, Validator $validator, User $user)
     {
         $this->db = $db;
         $this->session = $session;
@@ -99,43 +99,44 @@ class AuthController
     public function login()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            try {
-                $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
-                $password = $_POST['password'];
+            $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+            $password = $_POST['password'];
+            $role = $_POST['role']; 
 
-                $stmt = $this->db->prepare('
-                    SELECT id, password, role,
-                        (SELECT COUNT(*) FROM UserProfiles WHERE user_id = users.id) AS profile_completed
-                    FROM users
-                    WHERE email = ?
-                ');
-                $stmt->execute([$email]);
-                $user = $stmt->fetch();
+            if (!$email || !$password || !$role) {
+                return ['error' => 'All fields are required'];
+            }
 
-                if ($user && password_verify($password, $user['password'])) {
-                    $this->session->set('user_id', $user['id']);
-                    $this->session->set('role', $user['role']);
-                    
-                    if ($user['role'] === 'admin') {
-                        header('Location: /admin/dashboard');
-                        exit();
-                    } else if ($user['profile_completed'] === 0) {
-                        header('Location: /setup-profile');
-                        exit();
-                    } else {
-                        header('Location: /dashboard');
-                    }
-                    exit();
-                }
+            // Prepare statement
+            $stmt = $this->db->prepare("SELECT id, password, role FROM users WHERE email = ? AND role = ?");
+            $stmt->bind_param("ss", $email, $role);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $user = $result->fetch_assoc();
+            $stmt->close();
 
-                return ['error' => 'Invalid credentials'];
-            } catch (Exception $e) {
-                return ['error' => $e->getMessage()];
+            // Validate user existence & password
+            if (!$user || !password_verify($password, $user['password'])) {
+                return ['error' => 'Invalid email, password, or role.'];
+            }
+
+            // Store session data
+            $this->session->set('user_id', $user['id']);
+            $this->session->set('role', $user['role']);
+
+            // Redirect based on role
+            if ($user['role'] === 'admin') {
+                header('Location: /admin/dashboard');
+                exit();
+            } else {
+                header('Location: /dashboard');
+                exit();
             }
         }
 
         require_once __DIR__ . '/../views/auth/login.view.php';
     }
+
 
     public function logout()
     {

@@ -27,6 +27,13 @@
                     <label class="form-label">Password</label>
                     <input type="password" name="password" class="form-control" placeholder="Enter password" required>
                 </div>
+                <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <select name="role" class="form-control" required>
+                        <option value="customer">Customer</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
                 <button type="submit" class="btn btn-danger w-100">Login</button>
                 <p class="text-center mt-3">
                     Don't have an account? <a href="/register" class="text-danger">Sign Up</a>
