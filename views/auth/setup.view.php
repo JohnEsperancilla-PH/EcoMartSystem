@@ -12,7 +12,18 @@
     <div class="container d-flex justify-content-center align-items-center vh-100">
         <div class="card p-4 shadow-sm" style="width: 350px;">
             <h3 class="text-center mb-3">Complete Your Profile</h3>
-            <form action="index.php">
+
+            <?php if (isset($errors)): ?>
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        <?php foreach ($errors as $error): ?>
+                            <li><?php echo htmlspecialchars($error); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
+
+            <form method="POST" action="/setup-profile">
                 <div class="mb-3">
                     <label class="form-label">First Name</label>
                     <input type="text" class="form-control" placeholder="Enter first name" required>

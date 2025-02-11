@@ -1,0 +1,10 @@
+CREATE TABLE CartItems (
+    cart_item_id INT PRIMARY KEY AUTO_INCREMENT,
+    cart_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    price_at_time DECIMAL(10,2) NOT NULL,
+    added_at DATETIME NOT NULL,
+    FOREIGN KEY (cart_id) REFERENCES Cart(cart_id),
+    FOREIGN KEY (product_id) REFERENCES Products(product_id)
+);

@@ -1,0 +1,11 @@
+CREATE TABLE user_profiles (
+    profile_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    gender ENUM('male', 'female', 'other'),
+    birthdate DATE,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id)
+);
