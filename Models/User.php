@@ -11,7 +11,7 @@ class User
     public function authenticate($email, $password)
     {
         $stmt = $this->db->prepare('SELECT id, password FROM users WHERE email = ?');
-        $stmt->execute([$email]); // Fix: Pass email variable instead of string 'email'
+        $stmt->execute([$email]); 
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password'])) {

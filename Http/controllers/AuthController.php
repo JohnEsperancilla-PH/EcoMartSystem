@@ -5,7 +5,7 @@ class AuthController
     private $session;
     private $validator;
 
-    public function __construct(Database $db, Session $session, Validator $validator)
+    public function __construct(PDO $db, Session $session, Validator $validator)
     {
         $this->db = $db;
         $this->session = $session;

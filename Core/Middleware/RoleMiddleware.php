@@ -3,7 +3,7 @@ class RoleMiddleware {
     private $session;
     private $db;
 
-    public function __construct(Session $session, Database $db) {
+    public function __construct(Session $session, PDO $db) {
         $this->session = $session;
         $this->db = $db;
     }
