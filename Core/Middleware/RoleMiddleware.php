@@ -1,4 +1,6 @@
 <?php
+
+use Core\Session;
 class RoleMiddleware {
     private $session;
     private $db;

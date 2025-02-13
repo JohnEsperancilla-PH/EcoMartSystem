@@ -1,4 +1,10 @@
 <?php
+
+use Core\Validator;
+use Core\ValidationException;
+use Core\Session;
+use Models\User;
+    
 class AuthController
 {
     private $db;
@@ -54,7 +60,7 @@ class AuthController
             }
         }
 
-        require_once __DIR__ . '/../views/auth/signup.view.php';
+        require_once __DIR__ . '/../../views/auth/signup.view.php';
     }
 
     public function setupProfile()
@@ -93,50 +99,60 @@ class AuthController
             }
         }
 
-        require_once __DIR__ . '/../views/auth/setup.view.php';
+        require_once __DIR__ . '/../../views/auth/setup.view.php';
     }
 
     public function login()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
-            $password = $_POST['password'];
-            $role = $_POST['role']; 
+            try {
+                $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+                $password = $_POST['password'];
+                $role = $_POST['role'];
 
-            if (!$email || !$password || !$role) {
-                return ['error' => 'All fields are required'];
-            }
+                // Debug logging
+                error_log("Login attempt - Email: $email, Role: $role");
 
-            // Prepare statement
-            $stmt = $this->db->prepare("SELECT id, password, role FROM users WHERE email = ? AND role = ?");
-            $stmt->bind_param("ss", $email, $role);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $user = $result->fetch_assoc();
-            $stmt->close();
+                if (!$email || !$password || !$role) {
+                    return ['error' => 'All fields are required'];
+                }
 
-            // Validate user existence & password
-            if (!$user || !password_verify($password, $user['password'])) {
-                return ['error' => 'Invalid email, password, or role.'];
-            }
+                $stmt = $this->db->prepare("SELECT id, password, role FROM users WHERE email = ? AND role = ?");
+                $stmt->bind_param("ss", $email, $role);
+                $stmt->execute();
 
-            // Store session data
-            $this->session->set('user_id', $user['id']);
-            $this->session->set('role', $user['role']);
+                $result = $stmt->get_result();
+                $user = $result->fetch_assoc();
+                $stmt->close();
 
-            // Redirect based on role
-            if ($user['role'] === 'admin') {
-                header('Location: /admin/dashboard');
+                // Debug logging
+                error_log("User data: " . print_r($user, true));
+
+                if (!$user || !password_verify($password, $user['password'])) {
+                    return ['error' => 'Invalid email, password, or role.'];
+                }
+
+                $this->session->set('user_id', $user['id']);
+                $this->session->set('role', $user['role']);
+                $this->session->set('email', $email);
+
+                // Debug logging
+                error_log("Session after login: " . print_r($_SESSION, true));
+
+                if ($user['role'] === 'admin') {
+                    header('Location: /admin/dashboard');
+                } else {
+                    header('Location: /dashboard');
+                }
                 exit();
-            } else {
-                header('Location: /dashboard');
-                exit();
+            } catch (Exception $e) {
+                error_log("Login error: " . $e->getMessage());
+                return ['error' => $e->getMessage()];
             }
         }
 
-        require_once __DIR__ . '/../views/auth/login.view.php';
+        require_once __DIR__ . '/../../views/auth/login.view.php';
     }
-
 
     public function logout()
     {

@@ -1,4 +1,7 @@
 <?php
+
+namespace Core;
+
 class Session
 {
     public function __construct()

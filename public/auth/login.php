@@ -1,9 +1,14 @@
 <?php
+
 require_once __DIR__ . '/../../Core/Database.php';
 require_once __DIR__ . '/../../Core/Session.php';
 require_once __DIR__ . '/../../Http/controllers/AuthController.php';
 require_once __DIR__ . '/../../Core/Validator.php';
 require_once __DIR__ . '/../../Models/User.php';
+
+use Core\Session;
+use Core\Validator;
+use Models\User;
 
 $db = new Database();
 $session = new Session();

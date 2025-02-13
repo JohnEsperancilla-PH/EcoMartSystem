@@ -1,4 +1,9 @@
 <?php
+
+namespace Models;
+use mysqli;
+use Exception;
+
 class User
 {
     private $db;

@@ -30,8 +30,8 @@
                 <div class="mb-3">
                     <label class="form-label">Role</label>
                     <select name="role" class="form-control" required>
-                        <option value="customer">Customer</option>
                         <option value="admin">Admin</option>
+                        <option value="customer">Customer</option>
                     </select>
                 </div>
                 <button type="submit" class="btn btn-danger w-100">Login</button>
