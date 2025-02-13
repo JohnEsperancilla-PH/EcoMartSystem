@@ -4,7 +4,6 @@ class AdminController
 {
     public function dashboard()
     {
-        require_once __DIR__ . '/../../views/admin/dashboard.view.php';
-        exit();
+        require_once __DIR__ . '/../../public/admin/dashboard.php';
     }
 }

@@ -1,7 +1,5 @@
 <?php
 
-namespace Core\Middleware;
-
 use Core\Session;
 
 class AdminMiddleware
