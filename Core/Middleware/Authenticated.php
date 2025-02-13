@@ -1,4 +1,7 @@
 <?php
+
+use Core\Session;
+
 class Authenticated
 {
     private $session;

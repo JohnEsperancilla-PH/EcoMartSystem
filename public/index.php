@@ -1,4 +1,5 @@
 <?php
+// C:\Users\poyhi\OneDrive\EcoMart\EcoMartSystem\public\index.php
 
 define('DIR', dirname(__DIR__));
 
@@ -28,9 +29,10 @@ session_start();
 try {
     $router->dispatch($method, $uri);
 } catch (Exception $e) {
-    // Handle any routing errors
     header('HTTP/1.1 500 Internal Server Error');
-    echo "Error: " . $e->getMessage();
+    echo $e->getMessage(); // For debugging - remove in production
 }
 
-require_once __DIR__ . '/../views/index.view.php';
+if ($uri === '/' || basename($uri) === 'index.php') {
+    require_once DIR . '/views/index.view.php';
+}

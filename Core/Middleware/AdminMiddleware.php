@@ -15,9 +15,14 @@ class AdminMiddleware
 
     public function handle()
     {
-        if (!$this->session->get('user_id') || $this->session->get('role') !== 'admin') {
+        if (!$this->session->get('authenticated')) {
+            header('Location: /login');
+            exit();
+        }
+        if ($this->session->get('role') !== 'admin') {
             header('Location: /login');
             exit();
         }
     }
+
 }

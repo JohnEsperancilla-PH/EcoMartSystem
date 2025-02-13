@@ -18,7 +18,6 @@ class Router
     public function add($method, $uri, $controller)
     {
         $uri = '/' . ltrim($uri, '/');
-
         $this->routes[] = [
             'method' => $method,
             'uri' => $uri,
@@ -34,33 +33,39 @@ class Router
         foreach ($this->routes as $route) {
             if ($route['method'] == $method && $route['uri'] == $uri) {
                 [$controller, $action] = explode('@', $route['controller']);
-
-                $controllerPath = __DIR__ . '/../Http/Controllers/' . $controller . '.php';
-
+                
+                // Remove namespace if present
+                $controllerClass = basename($controller);
+                
+                // Handle both namespaced and non-namespaced controllers
+                $controllerPath = __DIR__ . '/../Http/Controllers/' . $controllerClass . '.php';
+                
                 if (!file_exists($controllerPath)) {
                     throw new Exception("Controller file not found: {$controllerPath}");
                 }
 
                 require_once $controllerPath;
-
-                if (!class_exists($controller)) {
-                    throw new Exception("Controller class {$controller} not found");
-                }
-
+                
                 // Initialize dependencies
                 $db = new mysqli("localhost", "root", "", "ecomart_db");
                 $session = new Session();
                 $validator = new \Core\Validator(); 
                 $user = new User($db);
 
-                // Pass dependencies to the controller
-                $controllerClass = new $controller($db, $session, $validator, $user);
-
-                if (!method_exists($controllerClass, $action)) {
-                    throw new Exception("Method {$action} not found in {$controller}");
+                // Handle both namespaced and non-namespaced controllers
+                $controllerClass = (strpos($controller, '\\') !== false) ? $controller : $controllerClass;
+                
+                if (!class_exists($controllerClass)) {
+                    throw new Exception("Controller class {$controllerClass} not found");
                 }
 
-                return $controllerClass->$action();
+                $controllerInstance = new $controllerClass($db, $session, $validator, $user);
+
+                if (!method_exists($controllerInstance, $action)) {
+                    throw new Exception("Method {$action} not found in {$controllerClass}");
+                }
+
+                return $controllerInstance->$action();
             }
         }
 

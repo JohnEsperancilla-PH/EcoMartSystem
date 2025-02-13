@@ -107,47 +107,48 @@ class AuthController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
-                $password = $_POST['password'];
-                $role = $_POST['role'];
+                $password = $_POST['password'] ?? '';
+                $role = $_POST['role'] ?? '';
 
-                // Debug logging
-                error_log("Login attempt - Email: $email, Role: $role");
-
-                if (!$email || !$password || !$role) {
-                    return ['error' => 'All fields are required'];
+                $stmt = $this->db->prepare("SELECT user_id, password, role, email FROM users WHERE email = ? AND role = ?");
+                if (!$stmt) {
+                    return ['error' => 'Database error occurred'];
                 }
 
-                $stmt = $this->db->prepare("SELECT id, password, role FROM users WHERE email = ? AND role = ?");
                 $stmt->bind_param("ss", $email, $role);
                 $stmt->execute();
-
                 $result = $stmt->get_result();
                 $user = $result->fetch_assoc();
                 $stmt->close();
 
-                // Debug logging
-                error_log("User data: " . print_r($user, true));
-
-                if (!$user || !password_verify($password, $user['password'])) {
-                    return ['error' => 'Invalid email, password, or role.'];
+                if (!$user) {
+                    header('Location: /error');
+                    exit();
                 }
 
-                $this->session->set('user_id', $user['id']);
+                if (!password_verify($password, $user['password'])) {
+                    header('Location: /error'); 
+                    exit();
+                }
+
+                $this->session->destroy();
+                session_start();
+
+                // Set session variables with user_id instead of id
+                $this->session->set('user_id', $user['user_id']);
                 $this->session->set('role', $user['role']);
-                $this->session->set('email', $email);
+                $this->session->set('email', $user['email']);
+                $this->session->set('authenticated', true);
 
-                // Debug logging
-                error_log("Session after login: " . print_r($_SESSION, true));
-
+                // Redirect based on role
                 if ($user['role'] === 'admin') {
                     header('Location: /admin/dashboard');
                 } else {
-                    header('Location: /dashboard');
+                    header('Location: /client/dashboard');
                 }
                 exit();
             } catch (Exception $e) {
-                error_log("Login error: " . $e->getMessage());
-                return ['error' => $e->getMessage()];
+                return ['error' => 'An error occurred during login'];
             }
         }
 
