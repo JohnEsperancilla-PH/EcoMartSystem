@@ -16,6 +16,8 @@ $router->add('GET', '/admin/dashboard', 'AdminController@dashboard');
 // Customer
 $router->add('GET', '/dashboard', 'CustomerController@dashboard');
 $router->add('GET', '/shop', 'CustomerController@shop');
+$router->add('GET', '/process-order', 'CustomerController@processOrder');
+$router->add('GET', '/branches', 'CustomerController@branches');
 
 // Error
 $router->add('GET', '/error', 'ErrorController@showError');

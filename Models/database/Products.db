@@ -1,4 +1,4 @@
-CREATE TABLE Products (
+CREATE TABLE products (
     product_id INT PRIMARY KEY AUTO_INCREMENT,
     category_id INT,
     name VARCHAR(255) NOT NULL,
@@ -6,7 +6,7 @@ CREATE TABLE Products (
     image_url VARCHAR(255),
     description TEXT,
     stock_quantity INT NOT NULL DEFAULT 0,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NOT NULL,
-    FOREIGN KEY (category_id) REFERENCES Categories(category_id)
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE CASCADE // Remove products if a category is deleted
 );

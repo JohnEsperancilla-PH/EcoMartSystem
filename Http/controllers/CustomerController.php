@@ -4,6 +4,14 @@ class CustomerController
 {
     public function shop()
     {
-        include_once __DIR__ . '/../../public/client/shop.php';
+        include_once DIR . '/public/client/shop.php';
+    }
+
+    public function branches() {
+        include_once DIR . '/public/client/branches.php';
+    }
+
+    public function processOrder() {
+
     }
 }
