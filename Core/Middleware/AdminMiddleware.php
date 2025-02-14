@@ -6,9 +6,9 @@ class AdminMiddleware
 {
     private $session;
 
-    public function __construct()
+    public function __construct(Session $session)
     {
-        $this->session = new Session();
+        $this->session = $session;
     }
 
     public function handle()
@@ -22,5 +22,4 @@ class AdminMiddleware
             exit();
         }
     }
-
 }

@@ -6,12 +6,14 @@ class Categories
 {
     private $conn;
 
-    public function __construct() {
+    public function __construct()
+    {
         $database = new Database();
         $this->conn = $database->getConnection();
     }
 
-    public function getAllCategories() {
+    public function getAllCategories()
+    {
         $sql = 'SELECT * FROM categories';
         $result = $this->conn->query($sql);
         $categories = [];

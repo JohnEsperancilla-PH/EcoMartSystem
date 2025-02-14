@@ -4,7 +4,7 @@ use Core\Validator;
 use Core\ValidationException;
 use Core\Session;
 use Models\User;
-    
+
 class AuthController
 {
     private $db;
@@ -60,7 +60,7 @@ class AuthController
             }
         }
 
-        require_once __DIR__ . '/../../views/auth/signup.view.php';
+        require_once DIR . '/views/auth/signup.view.php';
     }
 
     public function setupProfile()
@@ -99,7 +99,7 @@ class AuthController
             }
         }
 
-        require_once __DIR__ . '/../../views/auth/setup.view.php';
+        require_once DIR . '/views/auth/setup.view.php';
     }
 
     public function login()
@@ -122,19 +122,14 @@ class AuthController
                 $stmt->close();
 
                 if (!$user) {
-                    header('Location: /error');
-                    exit();
+                    return ['error' => 'Invalid credentials'];
                 }
 
                 if (!password_verify($password, $user['password'])) {
-                    header('Location: /error'); 
-                    exit();
+                    return ['error' => 'Invalid credentials'];
                 }
 
-                $this->session->destroy();
-                session_start();
-
-                // Set session variables with user_id instead of id
+                // Set session variables
                 $this->session->set('user_id', $user['user_id']);
                 $this->session->set('role', $user['role']);
                 $this->session->set('email', $user['email']);
@@ -143,16 +138,18 @@ class AuthController
                 // Redirect based on role
                 if ($user['role'] === 'admin') {
                     header('Location: /admin/dashboard');
+                    exit();
                 } else {
-                    header('Location: /client/dashboard');
+                    header('Location: /dashboard');
+                    exit();
                 }
-                exit();
             } catch (Exception $e) {
                 return ['error' => 'An error occurred during login'];
             }
         }
 
-        require_once __DIR__ . '/../../views/auth/login.view.php';
+        // Show login form for GET requests
+        require_once DIR . '/views/auth/login.view.php';
     }
 
     public function logout()

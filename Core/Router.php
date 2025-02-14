@@ -33,28 +33,28 @@ class Router
         foreach ($this->routes as $route) {
             if ($route['method'] == $method && $route['uri'] == $uri) {
                 [$controller, $action] = explode('@', $route['controller']);
-                
+
                 // Remove namespace if present
                 $controllerClass = basename($controller);
-                
+
                 // Handle both namespaced and non-namespaced controllers
                 $controllerPath = __DIR__ . '/../Http/Controllers/' . $controllerClass . '.php';
-                
+
                 if (!file_exists($controllerPath)) {
                     throw new Exception("Controller file not found: {$controllerPath}");
                 }
 
                 require_once $controllerPath;
-                
+
                 // Initialize dependencies
                 $db = new mysqli("localhost", "root", "", "ecomart_db");
                 $session = new Session();
-                $validator = new \Core\Validator(); 
+                $validator = new \Core\Validator();
                 $user = new User($db);
 
                 // Handle both namespaced and non-namespaced controllers
                 $controllerClass = (strpos($controller, '\\') !== false) ? $controller : $controllerClass;
-                
+
                 if (!class_exists($controllerClass)) {
                     throw new Exception("Controller class {$controllerClass} not found");
                 }

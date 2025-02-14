@@ -1,5 +1,4 @@
 <?php
-// C:\Users\poyhi\OneDrive\EcoMart\EcoMartSystem\routes.php
 
 $router->add('GET', '/', 'HomeController@index');
 
@@ -16,6 +15,7 @@ $router->add('GET', '/admin/dashboard', 'AdminController@dashboard');
 
 // Customer
 $router->add('GET', '/dashboard', 'CustomerController@dashboard');
+$router->add('GET', '/shop', 'CustomerController@shop');
 
 // Error
 $router->add('GET', '/error', 'ErrorController@showError');
