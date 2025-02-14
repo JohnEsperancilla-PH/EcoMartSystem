@@ -24,12 +24,15 @@ class AuthController
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
+                // Get JSON data from request body
+                $input = json_decode(file_get_contents('php://input'), true);
+                
                 $data = [
-                    'email' => $_POST['email'],
-                    'mobile_number' => $_POST['mobile_number'],
-                    'password' => $_POST['password'],
-                    'confirm_password' => $_POST['confirm_password'],
-                    'terms_accepted' => isset($_POST['terms_accepted']) ? 1 : 0,
+                    'email' => $input['email'],
+                    'mobile_number' => $input['mobile_number'],
+                    'password' => $input['password'],
+                    'confirm_password' => $input['confirm_password'],
+                    'terms_accepted' => $input['terms_accepted'] ? 1 : 0,
                     'role' => 'customer',
                 ];
 
@@ -47,16 +50,21 @@ class AuthController
                     throw new ValidationException(['confirm_password' => ['Passwords do not match']]);
                 }
 
-                $userId = $this->user->create($data);
-                $this->session->set('user_id', $userId);
-                $this->session->set('role', 'customer');
-
-                header('Location: /setup-profile');
+                // Store data in session for setup step
+                $this->session->set('signup_data', $data);
+                
+                // Return success response
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true]);
                 exit();
             } catch (ValidationException $e) {
-                return ['errors' => $e->getErrors()];
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'errors' => $e->getErrors()]);
+                exit();
             } catch (Exception $e) {
-                return ['error' => $e->getMessage()];
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                exit();
             }
         }
 
@@ -65,19 +73,27 @@ class AuthController
 
     public function setupProfile()
     {
-        if (!$this->session->get('user_id')) {
-            header('Location: /login');
+        // Get signup data from session
+        $signupData = $this->session->get('signup_data');
+        if (!$signupData) {
+            header('Location: /signup');
             exit();
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
-                $data = [
-                    'first_name' => $_POST['first_name'],
-                    'last_name' => $_POST['last_name'],
-                    'gender' => $_POST['gender'],
-                    'birthdate' => $_POST['birthdate']
+                // Get JSON data from request body
+                $input = json_decode(file_get_contents('php://input'), true);
+                
+                $profileData = [
+                    'first_name' => $input['first_name'],
+                    'last_name' => $input['last_name'],
+                    'gender' => $input['gender'],
+                    'birthdate' => $input['birthdate']
                 ];
+
+                // Combine signup and profile data
+                $completeData = array_merge($signupData, $profileData);
 
                 $rules = [
                     'first_name' => ['required' => true],
@@ -86,16 +102,28 @@ class AuthController
                     'birthdate' => ['required' => true, 'date' => true]
                 ];
 
-                $this->validator->validate($data, $rules);
+                $this->validator->validate($profileData, $rules);
 
-                $this->user->updateProfile($this->session->get('user_id'), $data);
+                // Create user with complete data
+                $userId = $this->user->create($completeData);
+                
+                // Set session data
+                $this->session->set('user_id', $userId);
+                $this->session->set('role', 'customer');
+                $this->session->remove('signup_data');
 
-                header('Location: /dashboard');
+                // Return success response
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true]);
                 exit();
             } catch (ValidationException $e) {
-                return ['errors' => $e->getErrors()];
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'errors' => $e->getErrors()]);
+                exit();
             } catch (Exception $e) {
-                return ['error' => $e->getMessage()];
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                exit();
             }
         }
 
@@ -137,7 +165,7 @@ class AuthController
 
                 // Redirect based on role
                 if ($user['role'] === 'admin') {
-                    header('Location: /admin/dashboard');
+                    header('Location: /dashboard');
                     exit();
                 } else {
                     header('Location: /dashboard');

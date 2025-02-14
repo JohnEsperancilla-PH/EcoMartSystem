@@ -14,6 +14,7 @@ use Exception;
 class Router
 {
     private $routes = [];
+    private $currentMiddleware = [];
 
     public function add($method, $uri, $controller)
     {
@@ -21,8 +22,17 @@ class Router
         $this->routes[] = [
             'method' => $method,
             'uri' => $uri,
-            'controller' => $controller
+            'controller' => $controller,
+            'middleware' => $this->currentMiddleware
         ];
+        $this->currentMiddleware = [];
+        return $this;
+    }
+
+    public function middleware($middleware)
+    {
+        $this->currentMiddleware[] = $middleware;
+        return $this;
     }
 
     public function dispatch($method, $uri)
@@ -32,6 +42,11 @@ class Router
 
         foreach ($this->routes as $route) {
             if ($route['method'] == $method && $route['uri'] == $uri) {
+                // Execute middleware
+                foreach ($route['middleware'] as $middleware) {
+                    $middleware->handle();
+                }
+
                 [$controller, $action] = explode('@', $route['controller']);
 
                 // Remove namespace if present

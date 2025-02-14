@@ -1,7 +1,16 @@
 <?php
 
-$router->add('GET', '/', 'HomeController@index');
+use Core\Middleware\Authenticated;
+use Core\Session;
+use Core\Router;
 
+// Initialize router if not already initialized
+if (!isset($router)) {
+    $router = new Router();
+}
+
+// Public routes
+$router->add('GET', '/', 'HomeController@index');
 $router->add('GET', '/login', 'AuthController@login');
 $router->add('POST', '/login', 'AuthController@login');
 $router->add('GET', '/register', 'AuthController@register');
@@ -10,14 +19,20 @@ $router->add('POST', '/logout', 'AuthController@logout');
 $router->add('GET', '/setup-profile', 'AuthController@setupProfile');
 $router->add('POST', '/setup-profile', 'AuthController@setupProfile');
 
-// Admin route
-$router->add('GET', '/admin/dashboard', 'AdminController@dashboard');
+// Admin routes
+$router->add('GET', '/dashboard', 'AdminController@dashboard')
+    ->middleware(new Authenticated(new Session()));
 
-// Customer
-$router->add('GET', '/dashboard', 'CustomerController@dashboard');
-$router->add('GET', '/shop', 'CustomerController@shop');
-$router->add('GET', '/process-order', 'CustomerController@processOrder');
-$router->add('GET', '/branches', 'CustomerController@branches');
+// Customer routes
+$router->add('GET', '/shop', 'CustomerController@shop')
+    ->middleware(new Authenticated(new Session()));
+$router->add('GET', '/branches', 'CustomerController@branches')
+    ->middleware(new Authenticated(new Session()));
+$router->add('GET', '/process-order', 'CustomerController@processOrder')
+    ->middleware(new Authenticated(new Session()));
 
-// Error
+// Error route
 $router->add('GET', '/error', 'ErrorController@showError');
+
+// Return the router instance
+return $router;

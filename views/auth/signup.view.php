@@ -14,7 +14,8 @@
         <div class="container d-flex justify-content-center align-items-center vh-100">
             <div class="card p-4 shadow-sm" style="width: 350px;">
                 <h3 class="text-center mb-3">Sign Up</h3>
-                <form method="POST" action="/register">
+                <form id="signupForm" onsubmit="handleSignup(event)">
+
                     <div class="mb-3">
                         <label class="form-label">Email Address</label>
                         <input type="email" name="email" class="form-control" placeholder="Enter email" required>
@@ -38,6 +39,64 @@
                         </label>
                     </div>
                     <button type="submit" class="btn btn-danger w-100">Next</button>
+                </form>
+
+                <script>
+                function handleSignup(event) {
+                    event.preventDefault();
+                    
+                    // Get form data
+                    const formData = {
+                        email: document.querySelector('input[name="email"]').value,
+                        mobile_number: document.querySelector('input[name="mobile_number"]').value,
+                        password: document.querySelector('input[name="password"]').value,
+                        confirm_password: document.querySelector('input[name="confirm_password"]').value,
+                        terms_accepted: document.querySelector('input[name="terms_accepted"]').checked
+                    };
+
+                    // Basic validation
+                    if (!formData.email || !formData.mobile_number || !formData.password || 
+                        !formData.confirm_password || !formData.terms_accepted) {
+                        alert('Please fill out all fields');
+                        return;
+                    }
+
+                    if (formData.password !== formData.confirm_password) {
+                        alert('Passwords do not match');
+                        return;
+                    }
+
+                    // Send data to server
+                    fetch('/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Redirect to setup profile page
+                            window.location.href = '/setup-profile';
+                        } else {
+                            if (data.errors) {
+                                // Display validation errors
+                                const errorMessages = Object.values(data.errors).join('\n');
+                                alert(errorMessages);
+                            } else {
+                                alert('Registration failed. Please try again.');
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred. Please try again.');
+                    });
+                }
+                </script>
+
+
                 </form>
             </div>
         </div>

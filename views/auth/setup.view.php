@@ -23,18 +23,22 @@
                 </div>
             <?php endif; ?>
 
-            <form method="POST" action="/setup-profile">
+            <form id="setupForm" onsubmit="handleSetup(event)">
+
                 <div class="mb-3">
                     <label class="form-label">First Name</label>
-                    <input type="text" class="form-control" placeholder="Enter first name" required>
+                    <input type="text" name="first_name" class="form-control" placeholder="Enter first name" required>
+
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Last Name</label>
-                    <input type="text" class="form-control" placeholder="Enter last name" required>
+                    <input type="text" name="last_name" class="form-control" placeholder="Enter last name" required>
+
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Gender</label>
-                    <select class="form-control">
+                    <select class="form-control" name="gender">
+
                         <option>Male</option>
                         <option>Female</option>
                         <option>Other</option>
@@ -42,14 +46,63 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Birthdate</label>
-                    <input type="date" class="form-control" required>
+                    <input type="date" name="birthdate" class="form-control" required>
+
                 </div>
                 <button type="submit" class="btn btn-danger w-100">Finish</button>
             </form>
+
+            <script>
+            function handleSetup(event) {
+                event.preventDefault();
+                
+                // Get form data
+                const formData = {
+                    first_name: document.querySelector('input[name="first_name"]').value,
+                    last_name: document.querySelector('input[name="last_name"]').value,
+                    gender: document.querySelector('select[name="gender"]').value,
+                    birthdate: document.querySelector('input[name="birthdate"]').value
+                };
+
+                // Basic validation
+                if (!formData.first_name || !formData.last_name || 
+                    !formData.gender || !formData.birthdate) {
+                    alert('Please fill out all fields');
+                    return;
+                }
+
+                // Get form data only (signup data is handled server-side)
+                const completeData = {
+                    ...formData
+                };
+
+
+                // Submit data to server
+                fetch('/setup-profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(completeData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+
+                        window.location.href = '/dashboard';
+                    } else {
+                        alert(data.message || 'Setup failed. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                });
+            }
+            </script>
+
         </div>
     </div>
 </body>
 
 </html>
-
-<?php include 'includes/footer.php'; ?>
