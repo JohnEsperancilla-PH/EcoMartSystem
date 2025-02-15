@@ -4,7 +4,6 @@ use Core\Middleware\Authenticated;
 use Core\Session;
 use Core\Router;
 
-// Initialize router if not already initialized
 if (!isset($router)) {
     $router = new Router();
 }
@@ -15,7 +14,6 @@ $router->add('GET', '/login', 'AuthController@login');
 $router->add('POST', '/login', 'AuthController@login');
 $router->add('GET', '/register', 'AuthController@register');
 $router->add('POST', '/register', 'AuthController@register');
-$router->add('POST', '/logout', 'AuthController@logout');
 $router->add('GET', '/setup-profile', 'AuthController@setupProfile');
 $router->add('POST', '/setup-profile', 'AuthController@setupProfile');
 

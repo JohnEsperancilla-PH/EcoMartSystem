@@ -1,8 +1,10 @@
 <?php
 
-require_once __DIR__ . '/../../Core/Database.php';
-require_once __DIR__ . '/../../Core/Session.php';
-require_once __DIR__ . '/../../Models/User.php';
+require_once DIR . '/Core/Database.php';
+require_once DIR . '/Core/Session.php';
+require_once DIR . '/Models/User.php';
+
+use Core\Session;
 
 $db = new Database();
 $session = new Session();
@@ -12,4 +14,4 @@ if (!$session->get('user_id')) {
     exit();
 }
 
-require_once __DIR__ . '/../views/auth/setup.view.php';
+require_once DIR . '/views/auth/setup.view.php';

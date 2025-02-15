@@ -4,6 +4,7 @@ use Core\Validator;
 use Core\ValidationException;
 use Core\Session;
 use Models\User;
+use Models\UserProfiles;
 
 class AuthController
 {
@@ -11,6 +12,7 @@ class AuthController
     private $session;
     private $validator;
     private $user;
+    private $userProfiles;
 
     public function __construct(mysqli $db, Session $session, Validator $validator, User $user)
     {
@@ -18,6 +20,7 @@ class AuthController
         $this->session = $session;
         $this->validator = $validator;
         $this->user = $user;
+        $this->userProfiles = new UserProfiles($db);
     }
 
     public function register()
@@ -27,14 +30,24 @@ class AuthController
                 // Get JSON data from request body
                 $input = json_decode(file_get_contents('php://input'), true);
                 
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    throw new Exception('Invalid JSON data received');
+                }
+
+                // Log the received data for debugging
+                error_log('Received registration data: ' . print_r($input, true));
+                
                 $data = [
-                    'email' => $input['email'],
-                    'mobile_number' => $input['mobile_number'],
-                    'password' => $input['password'],
-                    'confirm_password' => $input['confirm_password'],
-                    'terms_accepted' => $input['terms_accepted'] ? 1 : 0,
-                    'role' => 'customer',
+                    'email' => $input['email'] ?? null,
+                    'mobile_number' => $input['mobile_number'] ?? null,
+                    'password' => $input['password'] ?? null,
+                    'confirm_password' => $input['confirm_password'] ?? null,
+                    'terms_accepted' => isset($input['terms_accepted']) ? 1 : 0,
+                    'role' => 'customer'
                 ];
+
+                // Log the processed data
+                error_log('Processed registration data: ' . print_r($data, true));
 
                 $rules = [
                     'email' => ['required' => true, 'email' => true],
@@ -44,53 +57,77 @@ class AuthController
                     'terms_accepted' => ['required' => true, 'value' => true]
                 ];
 
+                // Validate the data
                 $this->validator->validate($data, $rules);
 
                 if ($data['password'] !== $data['confirm_password']) {
                     throw new ValidationException(['confirm_password' => ['Passwords do not match']]);
                 }
 
-                // Store data in session for setup step
-                $this->session->set('signup_data', $data);
+                // Check if email already exists
+                $stmt = $this->db->prepare("SELECT user_id FROM users WHERE email = ?");
+                $stmt->bind_param("s", $data['email']);
+                $stmt->execute();
+                if ($stmt->get_result()->num_rows > 0) {
+                    throw new ValidationException(['email' => ['Email already registered']]);
+                }
+                $stmt->close();
+
+                // Create the user account
+                $userId = $this->user->create($data);
+                
+                // Store the user ID in session
+                $this->session->set('user_id', $userId);
                 
                 // Return success response
                 header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Registration successful'
+                ]);
                 exit();
             } catch (ValidationException $e) {
+                error_log('Validation error: ' . print_r($e->getErrors(), true));
                 header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'errors' => $e->getErrors()
+                ]);
                 exit();
             } catch (Exception $e) {
+                error_log('Registration error: ' . $e->getMessage());
                 header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
                 exit();
             }
         }
 
-        require_once DIR . '/views/auth/signup.view.php';
+        // If not POST request, display the signup form
+        require_once __DIR__ . '/../../views/auth/signup.view.php';
     }
 
     public function setupProfile()
     {
-        // Get signup data from session
-        $signupData = $this->session->get('signup_data');
-        if (!$signupData) {
-            header('Location: /signup');
+        $userId = $this->session->get('user_id');
+
+        if (!$userId) {
+            header('Location: /register');
             exit();
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
-                // Get JSON data from request body
                 $input = json_decode(file_get_contents('php://input'), true);
-                
+
                 $profileData = [
                     'first_name' => $input['first_name'],
                     'last_name' => $input['last_name'],
-                    'gender' => $input['gender'],
-                    'birthdate' => $input['birthdate']
+                    'gender' => strtolower($input['gender']),
+                    'birthdate' => $input['birthdate'],
                 ];
-
-                // Combine signup and profile data
-                $completeData = array_merge($signupData, $profileData);
 
                 $rules = [
                     'first_name' => ['required' => true],
@@ -101,15 +138,12 @@ class AuthController
 
                 $this->validator->validate($profileData, $rules);
 
-                // Create user with complete data
-                $userId = $this->user->create($completeData);
-                
-                // Set session data
-                $this->session->set('user_id', $userId);
-                $this->session->set('role', 'customer');
-                $this->session->remove('signup_data');
+                // Create user profile
+                $this->userProfiles->create($userId, $profileData);
 
-                // Return success response
+                // Set role in session to customer
+                $this->session->set('role', 'customer');
+
                 header('Content-Type: application/json');
                 exit();
             } catch (ValidationException $e) {
@@ -132,8 +166,11 @@ class AuthController
                 $password = $_POST['password'] ?? '';
                 $role = $_POST['role'] ?? '';
 
+                error_log("Login attempt: Email={$email}, Role={$role}"); // Debugging
+
                 $stmt = $this->db->prepare("SELECT user_id, password, role, email FROM users WHERE email = ? AND role = ?");
                 if (!$stmt) {
+                    error_log("Database error: " . $this->db->error);
                     return ['error' => 'Database error occurred'];
                 }
 
@@ -144,10 +181,12 @@ class AuthController
                 $stmt->close();
 
                 if (!$user) {
+                    error_log("Invalid credentials: User not found"); // Debugging
                     return ['error' => 'Invalid credentials'];
                 }
 
                 if (!password_verify($password, $user['password'])) {
+                    error_log("Invalid credentials: Password incorrect"); // Debugging
                     return ['error' => 'Invalid credentials'];
                 }
 
@@ -157,15 +196,18 @@ class AuthController
                 $this->session->set('email', $user['email']);
                 $this->session->set('authenticated', true);
 
+                error_log("Session after setting: " . print_r($_SESSION, true)); // Debugging
+
                 // Redirect based on role
                 if ($user['role'] === 'admin') {
                     header('Location: /dashboard');
                     exit();
-                } else {
-                    header('Location: /dashboard');
+                } else if ($user['role'] === 'customer') {
+                    header('Location: /shop');
                     exit();
                 }
             } catch (Exception $e) {
+                error_log("Login error: " . $e->getMessage());
                 return ['error' => 'An error occurred during login'];
             }
         }
