@@ -55,15 +55,12 @@ class AuthController
                 
                 // Return success response
                 header('Content-Type: application/json');
-                echo json_encode(['success' => true]);
                 exit();
             } catch (ValidationException $e) {
                 header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'errors' => $e->getErrors()]);
                 exit();
             } catch (Exception $e) {
                 header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
                 exit();
             }
         }
@@ -114,15 +111,12 @@ class AuthController
 
                 // Return success response
                 header('Content-Type: application/json');
-                echo json_encode(['success' => true]);
                 exit();
             } catch (ValidationException $e) {
                 header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'errors' => $e->getErrors()]);
                 exit();
             } catch (Exception $e) {
                 header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
                 exit();
             }
         }
@@ -176,7 +170,6 @@ class AuthController
             }
         }
 
-        // Show login form for GET requests
         require_once DIR . '/views/auth/login.view.php';
     }
 

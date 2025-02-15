@@ -20,7 +20,7 @@ class Products
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
-    public function getProductsByCategory($category_id)
+    public function getProductsByCategory($categoryName)
     {
         $query = "SELECT p.* FROM products p
                   JOIN categories c ON p.category_id = c.category_id

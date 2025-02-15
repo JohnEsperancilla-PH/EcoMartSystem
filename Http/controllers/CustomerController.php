@@ -12,6 +12,6 @@ class CustomerController
     }
 
     public function processOrder() {
-
+        include_once DIR . '/public/client/process-order.php';
     }
 }

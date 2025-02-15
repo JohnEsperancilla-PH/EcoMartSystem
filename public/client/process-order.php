@@ -1,3 +1,3 @@
 <?php
 
-require_once __DIR__ . '/../views/client/process-order.view.php';
+require_once DIR. '/views/client/process-order.view.php';
