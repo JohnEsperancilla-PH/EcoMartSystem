@@ -1,6 +1,7 @@
 <?php
 
 use Core\Middleware\Authenticated;
+use Core\Middleware\AdminMiddleware;
 use Core\Session;
 use Core\Router;
 
@@ -23,7 +24,7 @@ $router->add('POST', '/setup-profile', 'AuthController@setupProfile');
 $router->add('GET', '/dashboard', 'AdminController@dashboard')
     ->middleware(new Authenticated(new Session()));
 
-// Customer routes
+// Client routes
 $router->add('GET', '/shop', 'CustomerController@shop')
     ->middleware(new Authenticated(new Session()));
 $router->add('GET', '/branches', 'CustomerController@branches')

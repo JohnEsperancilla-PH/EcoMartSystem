@@ -1,4 +1,3 @@
-// C:\Users\poyhi\OneDrive\EcoMart\EcoMartSystem\views\admin\dashboard.view.php
 <!DOCTYPE html>
 <html lang="en">
 
