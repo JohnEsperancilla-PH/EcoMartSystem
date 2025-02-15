@@ -13,12 +13,12 @@ class User
         $this->db = $db;
     }
 
-
     public function create($data)
     {
         try {
             $this->db->begin_transaction();
 
+            // Insert into users table
             $stmt = $this->db->prepare('
                 INSERT INTO users (email, mobile_number, password, terms_accepted, created_at, updated_at, role) 
                 VALUES (?, ?, ?, ?, NOW(), NOW(), ?)
@@ -42,16 +42,24 @@ class User
             $userId = $this->db->insert_id;
             $stmt->close();
 
+            // Insert into user_profiles table with all fields
             $stmt = $this->db->prepare('
-                INSERT INTO UserProfiles (user_id, created_at, updated_at)
-                VALUES (?, NOW(), NOW())
+                INSERT INTO user_profiles (user_id, first_name, last_name, gender, birthdate, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, NOW(), NOW())
             ');
 
             if (!$stmt) {
                 throw new Exception("Prepare failed: " . $this->db->error);
             }
 
-            $stmt->bind_param("i", $userId);
+            $stmt->bind_param(
+                "issss",
+                $userId,
+                $data['first_name'],
+                $data['last_name'],
+                $data['gender'],
+                $data['birthdate']
+            );
             $stmt->execute();
             $stmt->close();
 
@@ -61,28 +69,5 @@ class User
             $this->db->rollBack();
             throw $e;
         }
-    }
-
-    public function updateProfile($userId, $data)
-    {
-        $stmt = $this->db->prepare('
-            UPDATE UserProfiles 
-            SET first_name = ?, last_name = ?, gender = ?, birthdate = ?, updated_at = NOW()
-            WHERE user_id = ?
-        ');
-
-        if (!$stmt) {
-            throw new Exception("Prepare failed: " . $this->db->error);
-        }
-
-        $stmt->bind_param(
-            "ssssi",
-            $data['first_name'],
-            $data['last_name'],
-            $data['gender'],
-            $data['birthdate'],
-            $userId
-        );
-        return $stmt->execute();
     }
 }
