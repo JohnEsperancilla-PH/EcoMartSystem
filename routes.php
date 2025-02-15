@@ -23,7 +23,6 @@ $router->add('POST', '/setup-profile', 'AuthController@setupProfile');
 // Admin routes
 $router->add('GET', '/dashboard', 'AdminController@dashboard')->middleware(new Authenticated(new Session()));
 
-<<<<<<< HEAD
 // Client routes
 $router->add('GET', '/shop', 'CustomerController@shop')
     ->middleware(new Authenticated(new Session()));
@@ -31,12 +30,6 @@ $router->add('GET', '/branches', 'CustomerController@branches')
     ->middleware(new Authenticated(new Session()));
 $router->add('GET', '/process-order', 'CustomerController@processOrder')
     ->middleware(new Authenticated(new Session()));
-=======
-// Customer routes
-$router->add('GET', '/shop', 'CustomerController@shop')->middleware(new Authenticated(new Session()));
-$router->add('GET', '/branches', 'CustomerController@branches')->middleware(new Authenticated(new Session()));
-$router->add('GET', '/process-order', 'CustomerController@processOrder')->middleware(new Authenticated(new Session()));
->>>>>>> 8c3d9705956286d129fd38574834c1c2fb7e3a96
 
 // Error route
 $router->add('GET', '/error', 'ErrorController@showError');
