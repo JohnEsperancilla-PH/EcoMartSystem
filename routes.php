@@ -14,7 +14,7 @@ $router->add('GET', '/login', 'AuthController@login');
 $router->add('POST', '/login', 'AuthController@login');
 $router->add('GET', '/register', 'AuthController@register');
 $router->add('POST', '/register', 'AuthController@register');
-$router->add('POST', '/logout', 'AuthController@logout');
+$router->add('GET', '/logout', 'AuthController@logout');
 
 // Admin routes
 $router->add('GET', '/dashboard', 'AdminController@dashboard')->middleware(new Authenticated(new Session()));

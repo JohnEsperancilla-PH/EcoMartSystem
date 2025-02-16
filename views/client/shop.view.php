@@ -37,16 +37,16 @@
 
         <!-- Main Content -->
         <div class="col-lg-7">
-            <div class="bg-white rounded-3 p-4 shadow-sm">
+            <div class="bg-white rounded-3 p-4 shadow-sm overflow-auto vh-75">
                 <h2 class="h4 mb-4"><?= $selectedCategory ? htmlspecialchars($selectedCategory) : 'All Products' ?></h2>
                 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                     <?php if (!empty($products)): ?>
                         <?php foreach ($products as $product): ?>
                             <div class="col">
-                                <div class="card h-100 shadow-sm hover-shadow-lg transition-all">
+                                <div class="card h-100 shadow-sm">
                                     <div class="ratio ratio-1x1 bg-light">
                                         <?php if (!empty($product['image_url'])): ?>
-                                            <img src="<?= htmlspecialchars($product['image_url']) ?>" alt="Product Image">
+                                            <img src="<?= htmlspecialchars($product['image_url']) ?>" alt="Product Image" class="w-100 h-100 object-fit-cover">
                                         <?php endif; ?>
                                     </div>
                                     <div class="card-body d-flex flex-column">
@@ -68,7 +68,7 @@
 
         <!-- Cart Sidebar -->
         <div class="col-lg-3">
-            <div class="bg-white rounded-3 p-4 shadow-sm sticky-top" style="top: 1rem;">
+            <div class="card bg-white rounded-3 p-4 shadow-sm sticky-top" style="top: 1rem;">
                 <div class="d-flex align-items-center mb-3">
                     <h3 class="h4 mb-0">
                         <i class="fas fa-shopping-cart me-2"></i>Cart
@@ -76,7 +76,7 @@
                     <span class="badge bg-primary rounded-pill ms-2">2</span>
                 </div>
 
-                <ul class="list-group mb-3">
+                <ul class="list-group list-group-flush mb-3"> 
                     <li class="list-group-item d-flex justify-content-between align-items-center py-2">
                         <div class="me-3">
                             <div class="text-truncate fw-bold">Product 1</div>
