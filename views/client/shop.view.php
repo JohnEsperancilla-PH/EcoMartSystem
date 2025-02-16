@@ -1,4 +1,4 @@
-<?php include __DIR__ . '/../components/header.php'; ?>
+<?php include __DIR__ . '/../components/client-header.php'; ?>
 
 <div class="container-lg mt-4">
     <div class="row g-4">
@@ -45,8 +45,8 @@
                             <div class="col">
                                 <div class="card h-100 shadow-sm hover-shadow-lg transition-all">
                                     <div class="ratio ratio-1x1 bg-light">
-                                        <?php if (!empty($row['image'])): ?>
-                                            <img src="<?= htmlspecialchars($row['image']) ?>" alt="Product Image">
+                                        <?php if (!empty($product['image_url'])): ?>
+                                            <img src="<?= htmlspecialchars($product['image_url']) ?>" alt="Product Image">
                                         <?php endif; ?>
                                     </div>
                                     <div class="card-body d-flex flex-column">

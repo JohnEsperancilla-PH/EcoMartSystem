@@ -67,76 +67,71 @@
     </div>
 
     <script>
-    function handleSignup(event) {
-        event.preventDefault();
-        
-        const formData = {
-            email: document.querySelector('input[name="email"]').value,
-            mobile_number: document.querySelector('input[name="mobile_number"]').value,
-            password: document.querySelector('input[name="password"]').value,
-            confirm_password: document.querySelector('input[name="confirm_password"]').value,
-            first_name: document.querySelector('input[name="first_name"]').value,
-            last_name: document.querySelector('input[name="last_name"]').value,
-            gender: document.querySelector('select[name="gender"]').value,
-            birthdate: document.querySelector('input[name="birthdate"]').value,
-            terms_accepted: document.querySelector('input[name="terms_accepted"]').checked
-        };
+        function handleSignup(event) {
+            event.preventDefault();
 
-        if (!formData.email || !formData.mobile_number || !formData.password || 
-            !formData.confirm_password || !formData.first_name || !formData.last_name ||
-            !formData.gender || !formData.birthdate || !formData.terms_accepted) {
-            showError('Please fill out all fields');
-            return;
-        }
+            const formData = {
+                email: document.querySelector('input[name="email"]').value,
+                mobile_number: document.querySelector('input[name="mobile_number"]').value,
+                password: document.querySelector('input[name="password"]').value,
+                confirm_password: document.querySelector('input[name="confirm_password"]').value,
+                first_name: document.querySelector('input[name="first_name"]').value,
+                last_name: document.querySelector('input[name="last_name"]').value,
+                gender: document.querySelector('select[name="gender"]').value,
+                birthdate: document.querySelector('input[name="birthdate"]').value,
+                terms_accepted: document.querySelector('input[name="terms_accepted"]').checked
+            };
 
-        if (formData.password !== formData.confirm_password) {
-            showError('Passwords do not match');
-            return;
-        }
-
-        fetch('/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => { throw err; });
+            if (formData.password !== formData.confirm_password) {
+                showError('Passwords do not match');
+                return;
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                window.location.href = data.redirect || '/login';
-            } else {
-                if (data.errors) {
-                    const errorMessages = Object.values(data.errors).join('\n');
-                    showError(errorMessages);
-                } else {
-                    showError(data.error || 'Registration failed. Please try again.');
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showError(error.message || 'An error occurred. Please try again.');
-        });
-    }
 
-    function showError(message) {
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'alert alert-danger mt-3';
-        errorDiv.textContent = message;
-        
-        const existingError = document.querySelector('.alert-danger');
-        if (existingError) {
-            existingError.remove();
+            fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw err;
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = data.redirect || '/login';
+                    } else {
+                        if (data.errors) {
+                            const errorMessages = Object.values(data.errors).join('\n');
+                            showError(errorMessages);
+                        } else {
+                            showError(data.error || 'Registration failed. Please try again.');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showError(error.message || 'An error occurred. Please try again.');
+                });
         }
-        
-        document.querySelector('.card').prepend(errorDiv);
-    }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger mt-3';
+            errorDiv.textContent = message;
+
+            const existingError = document.querySelector('.alert-danger');
+            if (existingError) {
+                existingError.remove();
+            }
+
+            document.querySelector('.card').prepend(errorDiv);
+        }
     </script>
 </body>
 

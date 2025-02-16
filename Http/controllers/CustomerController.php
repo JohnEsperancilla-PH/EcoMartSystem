@@ -14,4 +14,9 @@ class CustomerController
     public function processOrder() {
         include_once DIR . '/public/client/process-order.php';
     }
+
+    public function contact()
+    {
+        include_once DIR . '/public/client/contact.php';
+    }
 }
