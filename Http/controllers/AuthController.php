@@ -27,33 +27,42 @@ class AuthController
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
-                // Verify content type
-                if (empty($_SERVER['CONTENT_TYPE']) || stripos($_SERVER['CONTENT_TYPE'], 'application/json') === false) {
-                    throw new Exception('Invalid content type');
-                }
-
-                // Get JSON data from request body
-                $input = json_decode(file_get_contents('php://input'), true);
-                
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    throw new Exception('Invalid JSON data');
-                }
-
                 $data = [
-                    'email' => $input['email'],
-                    'mobile_number' => $input['mobile_number'],
-                    'password' => $input['password'],
-                    'confirm_password' => $input['confirm_password'],
-                    'first_name' => $input['first_name'],
-                    'last_name' => $input['last_name'],
-                    'gender' => $input['gender'],
-                    'birthdate' => $input['birthdate'],
-                    'terms_accepted' => $input['terms_accepted'] ? 1 : 0,
+                    'email' => $_POST['email'] ?? '',
+                    'mobile_number' => $_POST['mobile_number'] ?? '',
+                    'password' => $_POST['password'] ?? '',
+                    'confirm_password' => $_POST['confirm_password'] ?? '',
+                    'first_name' => $_POST['first_name'] ?? '',
+                    'last_name' => $_POST['last_name'] ?? '',
+                    'gender' => $_POST['gender'] ?? '',
+                    'birthdate' => $_POST['birthdate'] ?? '',
+                    'terms_accepted' => isset($_POST['terms_accepted']) ? 1 : 0,
                     'role' => 'customer',
                 ];
 
-                // Log the processed data
-                error_log('Processed registration data: ' . print_r($data, true));
+                // Check if email already exists
+                $stmt = $this->db->prepare("SELECT email FROM users WHERE email = ?");
+                $stmt->bind_param("s", $data['email']);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                if ($result->num_rows > 0) {
+                    $this->session->set('email_error', 'Email address is already registered');
+                    header('Location: /register');
+                    exit();
+                }
+                $stmt->close();
+
+                // Check if mobile number already exists
+                $stmt = $this->db->prepare("SELECT mobile_number FROM users WHERE mobile_number = ?");
+                $stmt->bind_param("s", $data['mobile_number']);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                if ($result->num_rows > 0) {
+                    $this->session->set('mobile_error', 'Mobile number is already registered');
+                    header('Location: /register');
+                    exit();
+                }
+                $stmt->close();
 
                 $rules = [
                     'email' => ['required' => true, 'email' => true],
@@ -71,42 +80,33 @@ class AuthController
                 $this->validator->validate($data, $rules);
 
                 if ($data['password'] !== $data['confirm_password']) {
-                    throw new ValidationException(['confirm_password' => ['Passwords do not match']]);
+                    $this->session->set('password_error', 'Passwords do not match');
+                    header('Location: /register');
+                    exit();
+                }
+
+                // Validate password strength
+                if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/', $data['password'])) {
+                    $this->session->set('password_error', 'Password must contain at least 8 characters, including uppercase, lowercase, and numbers');
+                    header('Location: /register');
+                    exit();
                 }
 
                 // Create user with complete data
                 $userId = $this->user->create($data);
-                
-                // Set session data
-                $this->session->set('user_id', $userId);
-                $this->session->set('role', 'customer');
 
-                // Return JSON response
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Registration successful',
-                    'redirect' => '/login'
-                ]);
+                $this->session->set('success', 'Registration successful! Please login to continue.');
+                header('Location: /login');
                 exit();
             } catch (ValidationException $e) {
-                error_log('Validation Error: ' . print_r($e->getErrors(), true));
-                header('Content-Type: application/json');
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'errors' => $e->getErrors()
-                ]);
+                foreach ($e->getErrors() as $field => $errors) {
+                    $this->session->set($field . '_error', $errors[0]);
+                }
+                header('Location: /register');
                 exit();
             } catch (Exception $e) {
-                error_log('Signup Error: ' . $e->getMessage());
-                error_log('Trace: ' . $e->getTraceAsString());
-                header('Content-Type: application/json');
-                http_response_code(500);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'An error occurred during signup. Please try again.'
-                ]);
+                $this->session->set('error', 'An error occurred during registration. Please try again.');
+                header('Location: /register');
                 exit();
             }
         }
@@ -123,6 +123,12 @@ class AuthController
                 $password = $_POST['password'] ?? '';
                 $role = $_POST['role'] ?? '';
 
+                if (!$email) {
+                    $this->session->set('email_error', 'Please enter a valid email address');
+                    header('Location: /login');
+                    exit();
+                }
+
                 $stmt = $this->db->prepare("SELECT user_id, password, role, email FROM users WHERE email = ? AND role = ?");
                 if (!$stmt) {
                     throw new Exception('Database error occurred');
@@ -135,11 +141,15 @@ class AuthController
                 $stmt->close();
 
                 if (!$user) {
-                    throw new Exception('Invalid credentials');
+                    $this->session->set('login_error', 'Invalid email or role');
+                    header('Location: /login');
+                    exit();
                 }
 
                 if (!password_verify($password, $user['password'])) {
-                    throw new Exception('Invalid credentials');
+                    $this->session->set('password_error', 'Invalid password');
+                    header('Location: /login');
+                    exit();
                 }
 
                 // Set session variables

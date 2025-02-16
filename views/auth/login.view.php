@@ -14,25 +14,40 @@
         <div class="card p-4 shadow-sm" style="width: 350px;">
             <h3 class="text-center mb-3">Login</h3>
 
-            <?php if (isset($error)): ?>
-                <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+            <?php if (isset($_SESSION['error'])): ?>
+                <div class="alert alert-danger"><?php echo htmlspecialchars($_SESSION['error']); ?></div>
+                <?php unset($_SESSION['error']); ?>
             <?php endif; ?>
 
             <form method="POST" action="/login">
                 <div class="mb-3">
                     <label class="form-label">Email Address</label>
-                    <input type="email" name="email" class="form-control" placeholder="Enter email" required>
+                    <input type="email" name="email" class="form-control <?php echo isset($_SESSION['email_error']) ? 'is-invalid' : ''; ?>"
+                        placeholder="Enter email" required>
+                    <?php if (isset($_SESSION['email_error'])): ?>
+                        <div class="invalid-feedback"><?php echo htmlspecialchars($_SESSION['email_error']); ?></div>
+                        <?php unset($_SESSION['email_error']); ?>
+                    <?php endif; ?>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Password</label>
-                    <input type="password" name="password" class="form-control" placeholder="Enter password" required>
+                    <input type="password" name="password" class="form-control <?php echo isset($_SESSION['password_error']) ? 'is-invalid' : ''; ?>"
+                        placeholder="Enter password" required>
+                    <?php if (isset($_SESSION['password_error'])): ?>
+                        <div class="invalid-feedback"><?php echo htmlspecialchars($_SESSION['password_error']); ?></div>
+                        <?php unset($_SESSION['password_error']); ?>
+                    <?php endif; ?>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Role</label>
-                    <select name="role" class="form-control" required>
+                    <select name="role" class="form-control <?php echo isset($_SESSION['login_error']) ? 'is-invalid' : ''; ?>" required>
                         <option value="admin">Admin</option>
                         <option value="customer">Customer</option>
                     </select>
+                    <?php if (isset($_SESSION['login_error'])): ?>
+                        <div class="invalid-feedback"><?php echo htmlspecialchars($_SESSION['login_error']); ?></div>
+                        <?php unset($_SESSION['login_error']); ?>
+                    <?php endif; ?>
                 </div>
                 <button type="submit" class="btn btn-danger w-100">Login</button>
                 <p class="text-center mt-3">
