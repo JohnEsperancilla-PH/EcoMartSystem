@@ -36,10 +36,19 @@
         </div>
 
         <!-- Main Content -->
-        <div class="col-lg-7">
+        <div class="col-lg-10">
             <div class="bg-white rounded-3 p-4 shadow-sm overflow-auto vh-75">
-                <h2 class="h4 mb-4"><?= $selectedCategory ? htmlspecialchars($selectedCategory) : 'All Products' ?></h2>
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="h4"><?= $selectedCategory ? htmlspecialchars($selectedCategory) : 'All Products' ?></h2>
+                    <a href="/process-order" class="btn btn-primary position-relative">
+                        <i class="fas fa-shopping-cart me-2"></i>Cart
+                        <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+                            0
+                        </span>
+                    </a>
+                </div>
+
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
                     <?php if (!empty($products)): ?>
                         <?php foreach ($products as $product): ?>
                             <div class="col">
@@ -52,7 +61,10 @@
                                     <div class="card-body d-flex flex-column">
                                         <h5 class="card-title text-truncate"><?= htmlspecialchars($product['name']) ?></h5>
                                         <p class="fw-bold text-primary mb-2">₱<?= number_format($product['price'], 2) ?></p>
-                                        <button class="btn btn-primary btn-sm mt-auto w-100">
+                                        <button class="btn btn-primary btn-sm mt-auto w-100 add-to-cart" 
+                                                data-product-id="<?= $product['product_id'] ?>"
+                                                data-product-name="<?= htmlspecialchars($product['name']) ?>"
+                                                data-product-price="<?= $product['price'] ?>">
                                             <i class="fas fa-cart-plus me-2"></i>Add to Cart
                                         </button>
                                     </div>
@@ -65,48 +77,83 @@
                 </div>
             </div>
         </div>
-
-        <!-- Cart Sidebar -->
-        <div class="col-lg-3">
-            <div class="card bg-white rounded-3 p-4 shadow-sm sticky-top" style="top: 1rem;">
-                <div class="d-flex align-items-center mb-3">
-                    <h3 class="h4 mb-0">
-                        <i class="fas fa-shopping-cart me-2"></i>Cart
-                    </h3>
-                    <span class="badge bg-primary rounded-pill ms-2">2</span>
-                </div>
-
-                <ul class="list-group list-group-flush mb-3"> 
-                    <li class="list-group-item d-flex justify-content-between align-items-center py-2">
-                        <div class="me-3">
-                            <div class="text-truncate fw-bold">Product 1</div>
-                            <small class="text-muted">2 x ₱99.99</small>
-                        </div>
-                        <button class="btn btn-sm btn-link text-danger p-1">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </li>
-                </ul>
-
-                <div class="border-top pt-3">
-                    <div class="d-flex justify-content-between mb-3">
-                        <h5 class="mb-0">Total:</h5>
-                        <h5 class="text-primary mb-0">₱199.98</h5>
-                    </div>
-                    <button class="btn btn-primary w-100 mb-2">
-                        <i class="fas fa-wallet me-2"></i>Checkout
-                    </button>
-                    <button class="btn btn-outline-danger w-100">
-                        <i class="fas fa-trash me-2"></i>Clear Cart
-                    </button>
-                </div>
-
-                <div class="text-center text-muted mt-3 small">
-                    <i class="fas fa-lock me-2"></i>Secure checkout
-                </div>
-            </div>
-        </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize cart from localStorage
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+    updateCartCount();
+
+    // Add to cart functionality
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            const productName = this.dataset.productName;
+            const productPrice = parseFloat(this.dataset.productPrice);
+
+            // Check if product is already in cart
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    id: productId,
+                    name: productName,
+                    price: productPrice,
+                    quantity: 1
+                });
+            }
+
+            // Save to localStorage
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+
+            // Show success message
+            showNotification('Product added to cart!');
+        });
+    });
+
+    function updateCartCount() {
+        const cartCount = document.getElementById('cart-count');
+        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+        
+        if (totalItems > 0) {
+            cartCount.style.display = 'block';
+            cartCount.textContent = totalItems;
+        } else {
+            cartCount.style.display = 'none';
+        }
+    }
+
+    function showNotification(message) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = 'position-fixed top-0 end-0 p-3';
+        notification.style.zIndex = '1050';
+        
+        notification.innerHTML = `
+            <div class="toast show" role="alert">
+                <div class="toast-header">
+                    <strong class="me-auto">Cart</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+});
+</script>
 
 <?php include __DIR__ . '/../components/footer.php'; ?>
