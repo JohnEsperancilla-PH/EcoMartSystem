@@ -7,24 +7,6 @@
     <title>Admin Dashboard | EcoMart</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        /* Custom styles for scrollable tables */
-        .table-scrollable {
-            height: 400px;
-            overflow-y: auto;
-        }
-        .table-scrollable thead th {
-            position: sticky;
-            top: 0;
-            background-color: white;
-            z-index: 1;
-        }
-        .top-nav {
-            background-color: #f8f9fa;
-            padding: 10px 0;
-            border-bottom: 1px solid #dee2e6;
-        }
-    </style>
 </head>
 
 <body>
@@ -36,9 +18,6 @@
                     <h3>EcoMart Admin</h3>
                 </div>
                 <div class="d-flex align-items-center">
-                    <?php if (isset($session)): ?>
-                        <span class="me-3">Welcome, <?php echo htmlspecialchars($session->get('email')); ?></span>
-                    <?php endif; ?>
                     <a href="/logout">
                         <button type="submit" class="btn btn-danger">
                             <i class="bi bi-box-arrow-right me-1"></i>Logout

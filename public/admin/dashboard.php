@@ -1,11 +1,10 @@
 <?php
 
+// require_once DIR . '/Core/Session.php';
+// require_once DIR . '/Core/Database.php';
 
-require_once DIR . '/Core/Session.php';
-require_once DIR . '/Core/Database.php';
-
-$database = new Database();
-$conn = $database->getConnection();
+// $database = new Database();
+// $conn = $database->getConnection();
 
 // Fetch all orders
 // $ordersQuery = "SELECT o.order_id, u.email, o.total_amount, o.status, o.order_date 
@@ -41,7 +40,5 @@ $conn = $database->getConnection();
 
 // // Close the database connection
 // $database->close();
-
-// Correct the path to the view file
 
 require_once DIR . '/views/admin/dashboard.view.php';

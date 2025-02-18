@@ -335,7 +335,6 @@
 
 
             } catch (error) {
-                console.error('Order submission error:', error);
                 showModal('There was an error processing your order. Please try again.'); // Show error modal
             }
         });

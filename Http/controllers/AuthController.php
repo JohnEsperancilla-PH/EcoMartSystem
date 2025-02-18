@@ -86,11 +86,11 @@ class AuthController
                 }
 
                 // Validate password strength
-                if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/', $data['password'])) {
-                    $this->session->set('password_error', 'Password must contain at least 8 characters, including uppercase, lowercase, and numbers');
-                    header('Location: /register');
-                    exit();
-                }
+                // if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/', $data['password'])) { 
+                //     $this->session->set('password_error', 'Password must contain at least 8 characters, including uppercase, lowercase, and numbers');
+                //     header('Location: /register');
+                //     exit();
+                // }
 
                 // Create user with complete data
                 $userId = $this->user->create($data);
@@ -177,8 +177,21 @@ class AuthController
 
     public function logout()
     {
-        $this->session->destroy();
+        // Unset all session variables
+        $this->session->remove('user_id');
+        $this->session->remove('user_role');
+        $this->session->remove('authenticated');
+
+        // Destroy the session completely
+        session_unset(); // Unset all session variables
+        session_destroy(); // Destroy the session
+
+        // Ensure the session cookie is deleted
+        setcookie(session_name(), '', time() - 3600, '/');
+
+        // Redirect to login page
         header('Location: /login');
         exit();
     }
+
 }
