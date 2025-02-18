@@ -25,6 +25,10 @@ $router->add('GET', '/branches', 'CustomerController@branches')->middleware(new 
 $router->add('GET', '/process-order', 'CustomerController@processOrder')->middleware(new Authenticated(new Session()));
 $router->add('GET', '/contact', 'CustomerController@contact')->middleware(new Authenticated(new Session()));
 
+// Order routes
+$router->add('POST', '/api/orders', 'OrderController@createOrder');
+$router->add('GET', '/order-confirmation', 'OrderController@confirmOrder');
+
 // Error route
 $router->add('GET', '/error', 'ErrorController@showError');
 

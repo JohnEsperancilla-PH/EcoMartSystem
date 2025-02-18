@@ -40,9 +40,7 @@
                     <input type="email" 
                            class="form-control" 
                            id="email" 
-                           name="email" 
-                           required 
-                           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+                           name="email">
                     <div class="invalid-feedback">
                         Please enter a valid email address
                     </div>
