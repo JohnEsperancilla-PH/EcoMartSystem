@@ -17,7 +17,7 @@ class AdminMiddleware
             header('Location: /login');
             exit();
         }
-        if ($this->session->get('role') !== 'admin') {
+        if ($this->session->get('user_role') !== 'admin') {
             header('Location: /login');
             exit();
         }

@@ -39,11 +39,11 @@
                     <?php if (isset($session)): ?>
                         <span class="me-3">Welcome, <?php echo htmlspecialchars($session->get('email')); ?></span>
                     <?php endif; ?>
-                    <form action="/logout" method="POST">
+                    <a href="/logout">
                         <button type="submit" class="btn btn-danger">
                             <i class="bi bi-box-arrow-right me-1"></i>Logout
                         </button>
-                    </form>
+                    </a>
                 </div>
             </div>
         </div>

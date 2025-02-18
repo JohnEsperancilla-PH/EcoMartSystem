@@ -24,6 +24,7 @@ body {
     padding: 0;
 }
 
+    
 .login-page::before, .signup-page::before {
     content: "";
     position: absolute;

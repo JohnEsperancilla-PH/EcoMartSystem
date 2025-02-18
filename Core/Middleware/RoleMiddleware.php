@@ -1,35 +1,23 @@
 <?php
 
-use Core\Session;
-class RoleMiddleware {
-    private $session;
-    private $db;
+namespace Core\Middleware;
 
-    public function __construct(Session $session, mysqli $db) {
+use Core\Session;
+
+class RoleMiddleware
+{
+    private $session;
+
+    public function __construct(Session $session)
+    {
         $this->session = $session;
-        $this->db = $db;
     }
 
-    public function handle($role) {
-        $userId = $this->session->get('user_id');
-        if (!$userId) {
-            header('Location: /login');
-            exit();
-        }
+    public function handle($allowedRoles)
+    {
+        $userRole = $this->session->get('user_role');
 
-        $stmt = $this->db->prepare('SELECT role FROM users WHERE id = ?');
-        if (!$stmt) {
-            die("Prepare failed: " . $this->db->error);
-        }
-
-
-        $stmt->bind_param("i", $userId);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $user = $result->fetch_assoc();
-        $stmt->close();
-
-        if (!$user || $user['role'] !== $role) {
+        if (!$userRole || !in_array($userRole, (array) $allowedRoles)) {
             header('Location: /unauthorized');
             exit();
         }

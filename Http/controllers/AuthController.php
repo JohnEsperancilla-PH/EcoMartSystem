@@ -112,7 +112,7 @@ class AuthController
         }
 
         // If not POST request, display the signup form
-        require_once __DIR__ . '/../../views/auth/signup.view.php';
+        require_once DIR . '/views/auth/signup.view.php';
     }
 
     public function login()
