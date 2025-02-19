@@ -275,6 +275,7 @@
         // Form validation and submission
         const form = document.getElementById('checkout-form');
 
+        // Update the form submission event listener in process-order.view.php
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
 
@@ -293,6 +294,7 @@
             const formData = new FormData(form);
             const orderData = {
                 customer: {
+                    userId: window.currentUserId, // Add this to your view
                     fullName: formData.get('full_name'),
                     email: formData.get('email'),
                     address: formData.get('address'),
@@ -303,12 +305,15 @@
                     method: formData.get('payment_method'),
                     gcashRef: formData.get('gcash_ref') || null
                 },
-                items: cart,
+                items: cart.map(item => ({
+                    id: item.id,
+                    quantity: item.quantity,
+                    price: item.price
+                })),
                 termsAgreed: formData.get('terms_agree') === 'on'
             };
 
             try {
-                // Send order to server
                 const response = await fetch('/api/orders', {
                     method: 'POST',
                     headers: {
@@ -317,25 +322,26 @@
                     body: JSON.stringify(orderData)
                 });
 
+                const result = await response.json();
+
                 if (!response.ok) {
-                    throw new Error('Order submission failed');
+                    throw new Error(result.message || 'Order submission failed');
                 }
 
                 // Clear cart after successful order
                 localStorage.removeItem('cart');
 
-                // Show success message in the modal
+                // Show success message
                 showModal('Order placed successfully!');
 
-                // Optional: Redirect after the modal is closed
+                // Redirect after modal is closed
                 const orderModal = document.getElementById('orderModal');
                 orderModal.addEventListener('hidden.bs.modal', function() {
-                    window.location.href = '/order-confirmation';
+                    window.location.href = `/order-confirmation?id=${result.orderId}`;
                 });
 
-
             } catch (error) {
-                showModal('There was an error processing your order. Please try again.'); // Show error modal
+                showModal('There was an error processing your order: ' + error.message);
             }
         });
 

@@ -4,37 +4,52 @@
 class Orders {
     private $conn;
 
-    public function __construct() {
-        $database = new Database();
-        $this->conn = $database->getConnection();
+    public function __construct($db) {
+        $this->conn = $db;
     }
 
-    public function createOrder($userData, $items, $totalAmount) {
+    public function createOrder($orderData, $items) {
         try {
             $this->conn->begin_transaction();
 
-            // Insert into orders table
+            // Insert into orders table with additional customer information
             $stmt = $this->conn->prepare('
                 INSERT INTO Orders (
-                    user_id, 
-                    total_amount, 
-                    status, 
+                    user_id,
+                    customer_name,
+                    customer_email,
+                    customer_contact,
+                    delivery_address,
+                    total_amount,
+                    status,
+                    payment_method,
                     order_date,
                     updated_at
-                ) VALUES (?, ?, ?, NOW(), NOW())
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
             ');
 
-            // For guest orders, user_id will be null
-            $status = 'pending';
-            $stmt->bind_param('ids', $userData['user_id'], $totalAmount, $status);
-            $stmt->execute();
+            $stmt->bind_param('issssdss', 
+                $orderData['user_id'],
+                $orderData['customer_name'],
+                $orderData['customer_email'],
+                $orderData['customer_contact'],
+                $orderData['delivery_address'],
+                $orderData['total_amount'],
+                $orderData['status'],
+                $orderData['payment_method']
+            );
             
+            $stmt->execute();
             $orderId = $this->conn->insert_id;
 
             // Create OrderItems for each product
             $orderItems = new OrderItems($this->conn);
             foreach ($items as $item) {
-                $orderItems->createOrderItem($orderId, $item);
+                $orderItems->createOrderItem($orderId, [
+                    'id' => $item['id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price']
+                ]);
             }
 
             $this->conn->commit();
@@ -44,14 +59,5 @@ class Orders {
             $this->conn->rollback();
             throw $e;
         }
-    }
-
-    public function getOrderById($orderId) {
-        $stmt = $this->conn->prepare('
-            SELECT * FROM Orders WHERE order_id = ?
-        ');
-        $stmt->bind_param('i', $orderId);
-        $stmt->execute();
-        return $stmt->get_result()->fetch_assoc();
     }
 }

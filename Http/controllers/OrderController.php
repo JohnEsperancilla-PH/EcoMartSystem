@@ -1,11 +1,18 @@
 <?php
-// Controllers/OrderController.php
+// Http/Controllers/OrderController.php
+
+require_once __DIR__ . '/../../Models/Orders.php';
+require_once __DIR__ . '/../../Models/OrderItems.php';
+require_once __DIR__ . '/../../Core/Database.php';
 
 class OrderController {
     private $orderModel;
-    
+    private $db;
+
     public function __construct() {
-        $this->orderModel = new Orders();
+        $database = new Database();
+        $this->db = $database->getConnection();
+        $this->orderModel = new Orders($this->db);
     }
 
     public function createOrder() {
@@ -19,24 +26,35 @@ class OrderController {
 
             // Get JSON data from request body
             $data = json_decode(file_get_contents('php://input'), true);
-            
+
             if (!$data) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Invalid request data']);
                 return;
             }
 
+            // Prepare customer data
+            $customerData = $data['customer'];
+            
+            // Create the order data structure
+            $orderData = [
+                'user_id' => null, // Default to null for guest orders
+                'customer_name' => $customerData['fullName'],
+                'customer_email' => $customerData['email'],
+                'customer_contact' => $customerData['contact'],
+                'delivery_address' => $customerData['address'],
+                'total_amount' => 0,
+                'status' => 'pending',
+                'payment_method' => $data['payment']['method']
+            ];
+
             // Calculate total amount
-            $totalAmount = array_reduce($data['items'], function($sum, $item) {
+            $orderData['total_amount'] = array_reduce($data['items'], function($sum, $item) {
                 return $sum + ($item['price'] * $item['quantity']);
             }, 0);
 
             // Create order
-            $orderId = $this->orderModel->createOrder(
-                $data['customer'],
-                $data['items'],
-                $totalAmount
-            );
+            $orderId = $this->orderModel->createOrder($orderData, $data['items']);
 
             // Return success response
             http_response_code(201);
@@ -52,23 +70,6 @@ class OrderController {
                 'error' => 'Failed to create order',
                 'message' => $e->getMessage()
             ]);
-        }
-    }
-
-    public function confirmOrder($orderId) {
-        try {
-            $order = $this->orderModel->getOrderById($orderId);
-            
-            if (!$order) {
-                throw new Exception('Order not found');
-            }
-
-            require_once __DIR__ . '/../views/client/order-confirmation.view.php';
-
-        } catch (Exception $e) {
-            // Redirect to error page
-            header('Location: /error?message=' . urlencode($e->getMessage()));
-            exit;
         }
     }
 }
