@@ -7,19 +7,19 @@
 
         <ul class="nav flex-column px-3">
             <li class="nav-item mb-2">
-                <a href="/admin/dashboard" class="nav-link text-white <?php echo ($_SERVER['REQUEST_URI'] == '/admin/dashboard') ? 'active bg-primary' : ''; ?>">
+                <a href="/dashboard" class="nav-link text-white <?php echo ($_SERVER['REQUEST_URI'] == '/dashboard') ? 'active bg-primary' : ''; ?>">
                     <i class="bi bi-speedometer2 me-2"></i>
                     Dashboard
                 </a>
             </li>
             <li class="nav-item mb-2">
-                <a href="/admin/products/add" class="nav-link text-white <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/products/add') !== false) ? 'active bg-primary' : ''; ?>">
+                <a href="/add-products" class="nav-link text-white <?php echo (strpos($_SERVER['REQUEST_URI'], '/add-products') !== false) ? 'active bg-primary' : ''; ?>">
                     <i class="bi bi-plus-circle me-2"></i>
                     Add Product
                 </a>
             </li>
             <li class="nav-item mb-2">
-                <a href="/admin/orders" class="nav-link text-white <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/orders') !== false) ? 'active bg-primary' : ''; ?>">
+                <a href="/order-history" class="nav-link text-white <?php echo (strpos($_SERVER['REQUEST_URI'], '/order-history') !== false) ? 'active bg-primary' : ''; ?>">
                     <i class="bi bi-cart3 me-2"></i>
                     Orders History
                 </a>
