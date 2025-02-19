@@ -4,7 +4,7 @@
     <?php require_once __DIR__ . '/../components/admin-sidebar.php'; ?>
 
     <div class="main-content bg-light">
-        <div class="container-fluid px-4 py-4">
+        <div class="container-fluid px-4 py-5">
             <!-- Products Overview Cards -->
             <div class="row g-4 mb-4">
                 <?php foreach ($categoryStats as $stat): ?>
@@ -82,7 +82,7 @@
                             <i class="bi bi-box-seam me-2"></i>
                             Products Overview
                         </h5>
-                        <a href="/admin/products/add" class="btn btn-sm btn-primary">
+                        <a href="/add-products" class="btn btn-sm btn-primary">
                             <i class="bi bi-plus-lg me-1"></i>
                             Add New Product
                         </a>

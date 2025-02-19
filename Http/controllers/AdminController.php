@@ -3,6 +3,7 @@
 class AdminController
 {
     private $db;
+    private $itemsPerPage = 10;
 
     public function __construct()
     {
@@ -37,8 +38,25 @@ class AdminController
             exit();
         }
 
+        // Get current page from URL parameter
+        $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+
+        // Get filters from URL parameters
+        $filters = [
+            'category' => $_GET['category'] ?? '',
+            'stock_status' => $_GET['stock_status'] ?? '',
+            'search' => $_GET['search'] ?? ''
+        ];
+
         // Get categories for the dropdown
         $categories = $this->getAllCategories();
+
+        // Get paginated products
+        $products = $this->getProducts($currentPage, $filters);
+
+        // Get total products count for pagination
+        $totalProducts = $this->getTotalProducts($filters);
+        $totalPages = ceil($totalProducts / $this->itemsPerPage);
 
         include_once DIR . '/views/admin/add-products.view.php';
     }
@@ -71,17 +89,80 @@ class AdminController
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
-    private function getProducts()
+    private function getProducts($page = 1, $filters = [])
     {
+        // Calculate offset
+        $offset = ($page - 1) * $this->itemsPerPage;
+
+        // Base query
         $query = "SELECT 
             p.*, 
             c.name as category_name
         FROM Products p
         JOIN Categories c ON p.category_id = c.category_id
-        ORDER BY p.created_at DESC";
+        WHERE 1=1";
+
+        // Add filters
+        if (!empty($filters['category'])) {
+            $query .= " AND p.category_id = " . intval($filters['category']);
+        }
+
+        if (!empty($filters['stock_status'])) {
+            switch ($filters['stock_status']) {
+                case 'out_of_stock':
+                    $query .= " AND p.stock_quantity <= 0";
+                    break;
+                case 'low_stock':
+                    $query .= " AND p.stock_quantity > 0 AND p.stock_quantity <= 10";
+                    break;
+                case 'in_stock':
+                    $query .= " AND p.stock_quantity > 10";
+                    break;
+            }
+        }
+
+        if (!empty($filters['search'])) {
+            $search = $this->db->real_escape_string($filters['search']);
+            $query .= " AND (p.name LIKE '%$search%' OR p.description LIKE '%$search%')";
+        }
+
+        // Add pagination
+        $query .= " ORDER BY p.created_at DESC LIMIT $offset, $this->itemsPerPage";
 
         $result = $this->db->query($query);
         return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
+    private function getTotalProducts($filters = [])
+    {
+        $query = "SELECT COUNT(*) as total FROM Products p WHERE 1=1";
+
+        if (!empty($filters['category'])) {
+            $query .= " AND p.category_id = " . intval($filters['category']);
+        }
+
+        if (!empty($filters['stock_status'])) {
+            switch ($filters['stock_status']) {
+                case 'out_of_stock':
+                    $query .= " AND p.stock_quantity <= 0";
+                    break;
+                case 'low_stock':
+                    $query .= " AND p.stock_quantity > 0 AND p.stock_quantity <= 10";
+                    break;
+                case 'in_stock':
+                    $query .= " AND p.stock_quantity > 10";
+                    break;
+            }
+        }
+
+        if (!empty($filters['search'])) {
+            $search = $this->db->real_escape_string($filters['search']);
+            $query .= " AND (p.name LIKE '%$search%' OR p.description LIKE '%$search%')";
+        }
+
+        $result = $this->db->query($query);
+        $row = $result->fetch_assoc();
+        return $row['total'];
     }
 
     private function getTotalRevenue()
@@ -133,6 +214,12 @@ class AdminController
     // Add new product
     public function saveProduct()
     {
+        $session = new \Core\Session();
+        if (!$session->get('authenticated') || !$session->get('user_id') || $session->get('user_role') !== 'admin') {
+            header('Location: /login');
+            exit();
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /admin/products');
             exit();
@@ -141,7 +228,8 @@ class AdminController
         $name = $_POST['name'] ?? '';
         $price = $_POST['price'] ?? 0;
         $categoryId = $_POST['category_id'] ?? 0;
-        $imageUrl = ''; // Handle image upload here
+        $stockQuantity = $_POST['stock_quantity'] ?? 0;
+        $imageUrl = '';
 
         // Handle image upload if file was submitted
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
@@ -149,11 +237,11 @@ class AdminController
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO Products (name, price, category_id, image_url, created_at, updated_at)
-            VALUES (?, ?, ?, ?, NOW(), NOW())
-        ");
+        INSERT INTO Products (name, price, category_id, image_url, stock_quantity, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
+    ");
 
-        $stmt->bind_param("sdss", $name, $price, $categoryId, $imageUrl);
+        $stmt->bind_param("sdisss", $name, $price, $categoryId, $imageUrl, $stockQuantity);
 
         if ($stmt->execute()) {
             $_SESSION['success'] = 'Product added successfully';
@@ -165,19 +253,109 @@ class AdminController
         exit();
     }
 
-    // Delete product
-    public function deleteProduct($productId)
+    public function createProduct()
     {
-        $stmt = $this->db->prepare("DELETE FROM Products WHERE product_id = ?");
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /add-products');
+            exit();
+        }
+
+        $name = $_POST['name'] ?? '';
+        $categoryId = $_POST['category_id'] ?? '';
+        $price = $_POST['price'] ?? '';
+        $stockQuantity = $_POST['stock_quantity'] ?? '';
+
+        // Handle file upload
+        $imageUrl = '';
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = DIR . '/public/uploads/products/';
+            $fileName = uniqid() . '_' . basename($_FILES['image']['name']);
+            $targetPath = $uploadDir . $fileName;
+
+            if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
+                $imageUrl = '/uploads/products/' . $fileName;
+            }
+        }
+
+        $stmt = $this->db->prepare("INSERT INTO products (name, category_id, price, stock_quantity, image_url) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sidiss", $name, $categoryId, $price, $stockQuantity, $imageUrl);
+
+        if ($stmt->execute()) {
+            $_SESSION['success'] = "Product added successfully!";
+        } else {
+            $_SESSION['error'] = "Error adding product: " . $stmt->error;
+        }
+
+        header('Location: /add-products');
+        exit();
+    }
+
+    public function updateProduct()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /add-products');
+            exit();
+        }
+
+        $productId = $_POST['product_id'] ?? '';
+        $name = $_POST['name'] ?? '';
+        $categoryId = $_POST['category_id'] ?? '';
+        $price = $_POST['price'] ?? '';
+        $stockQuantity = $_POST['stock_quantity'] ?? '';
+
+        $query = "UPDATE products SET name = ?, category_id = ?, price = ?, stock_quantity = ?";
+        $params = [$name, $categoryId, $price, $stockQuantity];
+        $types = "sidis";
+
+        // Handle new image upload if provided
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = DIR . '/public/uploads/products/';
+            $fileName = uniqid() . '_' . basename($_FILES['image']['name']);
+            $targetPath = $uploadDir . $fileName;
+
+            if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
+                $query .= ", image_url = ?";
+                $params[] = '/uploads/products/' . $fileName;
+                $types .= "s";
+            }
+        }
+
+        $query .= " WHERE product_id = ?";
+        $params[] = $productId;
+        $types .= "i";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param($types, ...$params);
+
+        if ($stmt->execute()) {
+            $_SESSION['success'] = "Product updated successfully!";
+        } else {
+            $_SESSION['error'] = "Error updating product: " . $stmt->error;
+        }
+
+        header('Location: /add-products');
+        exit();
+    }
+
+    public function deleteProduct()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /add-products');
+            exit();
+        }
+
+        $productId = $_POST['product_id'] ?? '';
+
+        $stmt = $this->db->prepare("DELETE FROM products WHERE product_id = ?");
         $stmt->bind_param("i", $productId);
 
         if ($stmt->execute()) {
-            $_SESSION['success'] = 'Product deleted successfully';
+            $_SESSION['success'] = "Product deleted successfully!";
         } else {
-            $_SESSION['error'] = 'Failed to delete product';
+            $_SESSION['error'] = "Error deleting product: " . $stmt->error;
         }
 
-        header('Location: /admin/products');
+        header('Location: /add-products');
         exit();
     }
 
@@ -186,6 +364,18 @@ class AdminController
         $targetDir = DIR . "/public/uploads/products/";
         $fileName = uniqid() . "_" . basename($file['name']);
         $targetFile = $targetDir . $fileName;
+
+        // Create directory if it doesn't exist
+        if (!file_exists($targetDir)) {
+            mkdir($targetDir, 0777, true);
+        }
+
+        // Only allow certain file formats
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!in_array($file['type'], $allowedTypes)) {
+            $_SESSION['error'] = 'Invalid file type. Only JPG, PNG and GIF are allowed.';
+            return '';
+        }
 
         if (move_uploaded_file($file['tmp_name'], $targetFile)) {
             return "/uploads/products/" . $fileName;
