@@ -17,7 +17,8 @@
                             <label class="form-label">Category</label>
                             <select class="form-select" name="category_id" required>
                                 <?php foreach ($categories as $category): ?>
-                                    <option value="<?php echo $category['id']; ?>" <?php echo ($category['id'] == $product['category_id']) ? 'selected' : ''; ?>>
+                                    <option value="<?php echo $category['category_id']; ?>"
+                                        <?php echo (isset($_GET['category']) && $_GET['category'] == $category['category_id']) ? 'selected' : ''; ?>>
                                         <?php echo htmlspecialchars($category['name']); ?>
                                     </option>
                                 <?php endforeach; ?>
