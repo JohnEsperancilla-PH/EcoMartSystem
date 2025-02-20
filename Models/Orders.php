@@ -23,12 +23,14 @@ class Orders {
                     total_amount,
                     status,
                     payment_method,
+                    gcash_ref,
+                    gcash_phone,
                     order_date,
                     updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
             ');
 
-            $stmt->bind_param('issssdss', 
+            $stmt->bind_param('issssdssss', 
                 $orderData['user_id'],
                 $orderData['customer_name'],
                 $orderData['customer_email'],
@@ -36,7 +38,9 @@ class Orders {
                 $orderData['delivery_address'],
                 $orderData['total_amount'],
                 $orderData['status'],
-                $orderData['payment_method']
+                $orderData['payment_method'],
+                $orderData['gcash_ref'],
+                $orderData['gcash_phone']
             );
             
             $stmt->execute();

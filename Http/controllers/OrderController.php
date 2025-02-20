@@ -45,7 +45,9 @@ class OrderController {
                 'delivery_address' => $customerData['address'],
                 'total_amount' => 0,
                 'status' => 'pending',
-                'payment_method' => $data['payment']['method']
+                'payment_method' => $data['payment']['method'],
+                'gcash_ref' => $data['payment']['gcashRef'] ?? null,
+                'gcash_phone' => $data['payment']['gcashPhone'] ?? null
             ];
 
             // Calculate total amount
