@@ -113,14 +113,34 @@
                 </div>
 
                 <div id="gcashInfo" class="mb-3" style="display: none;">
-                    <label for="gcashRef" class="form-label">GCash Reference Number</label>
-                    <input type="text"
-                        class="form-control"
-                        id="gcashRef"
-                        name="gcash_ref"
-                        pattern="^[0-9]{10,13}$">
-                    <div class="invalid-feedback">
-                        Please enter a valid GCash reference number
+                    <div class="mb-3">
+                        <p><strong>Store GCash Account Number:</strong> 09171234567</p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="gcashRef" class="form-label">GCash Reference Number</label>
+                        <input type="text"
+                            class="form-control"
+                            id="gcashRef"
+                            name="gcash_ref">
+                        <div class="invalid-feedback">
+                            Please enter a valid GCash reference number (10-13 digits)
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="gcashPhone" class="form-label">GCash Customer Phone Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text">+63</span>
+                            <input type="tel"
+                                class="form-control"
+                                id="gcashPhone"
+                                name="gcash_phone"
+                                required
+                                pattern="^9[0-9]{9}$"
+                                placeholder="9XXXXXXXXX">
+                        </div>
+                        <div class="invalid-feedback">
+                            Please enter a valid Philippine mobile number
+                        </div>
                     </div>
                     <div class="mt-3">
                         <p class="mb-2">Scan QR Code to pay:</p>
@@ -179,7 +199,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="confirmationModalLabel">Confirmation</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close></button>
             </div>
             <div class="modal-body">
                 Are you sure you want to remove this item?
@@ -271,7 +291,6 @@
             }
         }
 
-
         // Form validation and submission
         const form = document.getElementById('checkout-form');
 
@@ -303,7 +322,8 @@
                 },
                 payment: {
                     method: formData.get('payment_method'),
-                    gcashRef: formData.get('gcash_ref') || null
+                    gcashRef: formData.get('gcash_ref'),
+                    gcashPhone: formData.get('gcash_phone')
                 },
                 items: cart.map(item => ({
                     id: item.id,
@@ -355,6 +375,16 @@
         document.getElementById('address').addEventListener('input', function() {
             const deliveryInfo = document.getElementById('delivery-info-display');
             deliveryInfo.textContent = this.value || 'Not yet provided';
+        });
+
+        // Show/hide GCash fields based on payment method selection
+        document.getElementById('paymentMethod').addEventListener('change', function() {
+            const gcashInfo = document.getElementById('gcashInfo');
+            if (this.value === 'gcash') {
+                gcashInfo.style.display = 'block';
+            } else {
+                gcashInfo.style.display = 'none';
+            }
         });
     });
 </script>
