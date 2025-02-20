@@ -25,8 +25,8 @@ class AdminController
         $totalRevenue = $this->getTotalRevenue();
         $totalOrdersCount = $this->getTotalOrders();
         $totalCustomers = $this->getTotalCustomers();
+        $totalProducts = $this->getTotalProductCount();
 
-        // Pass data to the view
         include_once DIR . '/views/admin/dashboard.view.php';
     }
 
@@ -78,10 +78,10 @@ class AdminController
     private function getCategoryStats()
     {
         $query = "SELECT 
-            c.name as category_name,
-            COUNT(p.product_id) as total_products
+        c.name as category_name,
+        COUNT(p.product_id) as total_products
         FROM Categories c
-        LEFT JOIN Products p ON c.category_id = c.category_id
+        LEFT JOIN Products p ON c.category_id = p.category_id
         GROUP BY c.category_id, c.name
         ORDER BY c.name ASC";
 
@@ -91,7 +91,6 @@ class AdminController
 
     private function getProducts($page = 1, $filters = [])
     {
-        // Calculate offset
         $offset = ($page - 1) * $this->itemsPerPage;
 
         // Base query
@@ -131,6 +130,14 @@ class AdminController
 
         $result = $this->db->query($query);
         return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
+    private function getTotalProductCount()
+    {
+        $query = "SELECT COUNT(*) as total FROM Products";
+        $result = $this->db->query($query);
+        $row = $result->fetch_assoc();
+        return $row['total'];
     }
 
     private function getTotalProducts($filters = [])
@@ -268,17 +275,15 @@ class AdminController
         // Handle file upload
         $imageUrl = '';
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = DIR . '/public/uploads/products/';
-            $fileName = uniqid() . '_' . basename($_FILES['image']['name']);
-            $targetPath = $uploadDir . $fileName;
-
-            if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
-                $imageUrl = '/uploads/products/' . $fileName;
+            $imageUrl = $this->handleImageUpload($_FILES['image']);
+            if (empty($imageUrl)) {
+                header('Location: /add-products');
+                exit();
             }
         }
 
-        $stmt = $this->db->prepare("INSERT INTO products (name, category_id, price, stock_quantity, image_url) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sidiss", $name, $categoryId, $price, $stockQuantity, $imageUrl);
+        $stmt = $this->db->prepare("INSERT INTO products (name, category_id, price, stock_quantity, image_url) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("sidis", $name, $categoryId, $price, $stockQuantity, $imageUrl);
 
         if ($stmt->execute()) {
             $_SESSION['success'] = "Product added successfully!";
@@ -305,17 +310,14 @@ class AdminController
 
         $query = "UPDATE products SET name = ?, category_id = ?, price = ?, stock_quantity = ?";
         $params = [$name, $categoryId, $price, $stockQuantity];
-        $types = "sidis";
+        $types = "sidi";
 
-        // Handle new image upload if provided
+        // Handle new image upload 
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = DIR . '/public/uploads/products/';
-            $fileName = uniqid() . '_' . basename($_FILES['image']['name']);
-            $targetPath = $uploadDir . $fileName;
-
-            if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
+            $imageUrl = $this->handleImageUpload($_FILES['image']);
+            if (!empty($imageUrl)) {
                 $query .= ", image_url = ?";
-                $params[] = '/uploads/products/' . $fileName;
+                $params[] = $imageUrl;
                 $types .= "s";
             }
         }
@@ -325,6 +327,13 @@ class AdminController
         $types .= "i";
 
         $stmt = $this->db->prepare($query);
+
+        if ($stmt === false) {
+            $_SESSION['error'] = "Error preparing statement: " . $this->db->error;
+            header('Location: /add-products');
+            exit();
+        }
+
         $stmt->bind_param($types, ...$params);
 
         if ($stmt->execute()) {
@@ -361,14 +370,17 @@ class AdminController
 
     private function handleImageUpload($file)
     {
-        $targetDir = DIR . "/public/uploads/products/";
-        $fileName = uniqid() . "_" . basename($file['name']);
-        $targetFile = $targetDir . $fileName;
+        $basePublicDir = DIR . "/public";
+        $uploadDir = "/images/products/";
+        $targetDir = $basePublicDir . $uploadDir;
 
         // Create directory if it doesn't exist
         if (!file_exists($targetDir)) {
             mkdir($targetDir, 0777, true);
         }
+
+        $fileName = uniqid() . "_" . basename($file['name']);
+        $targetFile = $targetDir . $fileName;
 
         // Only allow certain file formats
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -378,9 +390,10 @@ class AdminController
         }
 
         if (move_uploaded_file($file['tmp_name'], $targetFile)) {
-            return "/uploads/products/" . $fileName;
+            return "/images/products/" . $fileName; // Updated return path
         }
 
+        $_SESSION['error'] = 'Failed to upload file. Please check directory permissions.';
         return '';
     }
 }

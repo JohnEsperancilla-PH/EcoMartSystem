@@ -97,7 +97,6 @@
                                     <th class="border-0">Category</th>
                                     <th class="border-0">Price</th>
                                     <th class="border-0">Added Date</th>
-                                    <th class="border-0">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -115,20 +114,6 @@
                                         <td class="align-middle"><?php echo htmlspecialchars($product['category_name']); ?></td>
                                         <td class="align-middle">₱<?php echo number_format($product['price'], 2); ?></td>
                                         <td class="align-middle"><?php echo date('M d, Y', strtotime($product['created_at'])); ?></td>
-                                        <td class="align-middle">
-                                            <div class="btn-group">
-                                                <a href="/admin/products/edit/<?php echo $product['product_id']; ?>"
-                                                    class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <button type="button"
-                                                    class="btn btn-sm btn-outline-danger"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#deleteModal<?php echo $product['product_id']; ?>">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>

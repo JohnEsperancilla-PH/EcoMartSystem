@@ -22,8 +22,12 @@ $router->add('POST', '/register', 'AuthController@register');
 $router->add('GET', '/logout', 'AuthController@logout');
 
 // Admin routes
+// Admin routes
 $router->add('GET', '/dashboard', 'AdminController@dashboard')->middleware(new Authenticated(new Session()));
 $router->add('GET', '/add-products', 'AdminController@addProducts')->middleware(new Authenticated(new Session()));
+$router->add('POST', '/add-products/create', 'AdminController@createProduct')->middleware(new Authenticated(new Session()));
+$router->add('POST', '/add-products/update', 'AdminController@updateProduct')->middleware(new Authenticated(new Session()));
+$router->add('POST', '/add-products/delete', 'AdminController@deleteProduct')->middleware(new Authenticated(new Session())); 
 $router->add('GET', '/order-history', 'AdminController@orders')->middleware(new Authenticated(new Session()));
 
 $router->add('POST', '/create', 'AdminController@createProduct')->middleware(new Authenticated(new Session()));

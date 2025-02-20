@@ -61,11 +61,11 @@
                                     <div class="card-body d-flex flex-column">
                                         <h5 class="card-title text-truncate"><?= htmlspecialchars($product['name']) ?></h5>
                                         <p class="fw-bold text-primary mb-2">₱<?= number_format($product['price'], 2) ?></p>
-                                        <button class="btn btn-primary btn-sm mt-auto w-100 add-to-cart" 
-                                                data-product-id="<?= $product['product_id'] ?>"
-                                                data-product-name="<?= htmlspecialchars($product['name']) ?>"
-                                                data-product-price="<?= $product['price'] ?>">
-                                            <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                                        <button class="btn btn-primary btn-sm mt-auto w-100 add-to-cart"
+                                            data-product-id="<?= $product['product_id'] ?>"
+                                            data-product-name="<?= htmlspecialchars($product['name']) ?>"
+                                            data-product-price="<?= $product['price'] ?>">
+                                            <i class="bi bi-bag-check"></i>Add to Cart
                                         </button>
                                     </div>
                                 </div>
@@ -81,60 +81,60 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize cart from localStorage
-    let cart = JSON.parse(localStorage.getItem('cart')) || [];
-    updateCartCount();
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize cart from localStorage
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        updateCartCount();
 
-    // Add to cart functionality
-    document.querySelectorAll('.add-to-cart').forEach(button => {
-        button.addEventListener('click', function() {
-            const productId = this.dataset.productId;
-            const productName = this.dataset.productName;
-            const productPrice = parseFloat(this.dataset.productPrice);
+        // Add to cart functionality
+        document.querySelectorAll('.add-to-cart').forEach(button => {
+            button.addEventListener('click', function() {
+                const productId = this.dataset.productId;
+                const productName = this.dataset.productName;
+                const productPrice = parseFloat(this.dataset.productPrice);
 
-            // Check if product is already in cart
-            const existingItem = cart.find(item => item.id === productId);
-            
-            if (existingItem) {
-                existingItem.quantity += 1;
-            } else {
-                cart.push({
-                    id: productId,
-                    name: productName,
-                    price: productPrice,
-                    quantity: 1
-                });
-            }
+                // Check if product is already in cart
+                const existingItem = cart.find(item => item.id === productId);
 
-            // Save to localStorage
-            localStorage.setItem('cart', JSON.stringify(cart));
-            updateCartCount();
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    cart.push({
+                        id: productId,
+                        name: productName,
+                        price: productPrice,
+                        quantity: 1
+                    });
+                }
 
-            // Show success message
-            showNotification('Product added to cart!');
+                // Save to localStorage
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartCount();
+
+                // Show success message
+                showNotification('Product added to cart!');
+            });
         });
-    });
 
-    function updateCartCount() {
-        const cartCount = document.getElementById('cart-count');
-        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-        
-        if (totalItems > 0) {
-            cartCount.style.display = 'block';
-            cartCount.textContent = totalItems;
-        } else {
-            cartCount.style.display = 'none';
+        function updateCartCount() {
+            const cartCount = document.getElementById('cart-count');
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+            if (totalItems > 0) {
+                cartCount.style.display = 'block';
+                cartCount.textContent = totalItems;
+            } else {
+                cartCount.style.display = 'none';
+            }
         }
-    }
 
-    function showNotification(message) {
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.className = 'position-fixed top-0 end-0 p-3';
-        notification.style.zIndex = '1050';
-        
-        notification.innerHTML = `
+        function showNotification(message) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'position-fixed top-0 end-0 p-3';
+            notification.style.zIndex = '1050';
+
+            notification.innerHTML = `
             <div class="toast show" role="alert">
                 <div class="toast-header">
                     <strong class="me-auto">Cart</strong>
@@ -146,14 +146,14 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
 
-        document.body.appendChild(notification);
+            document.body.appendChild(notification);
 
-        // Remove after 3 seconds
-        setTimeout(() => {
-            notification.remove();
-        }, 3000);
-    }
-});
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    });
 </script>
 
 <?php include __DIR__ . '/../components/footer.php'; ?>
