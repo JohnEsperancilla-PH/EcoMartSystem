@@ -199,7 +199,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="confirmationModalLabel">Confirmation</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 Are you sure you want to remove this item?
@@ -378,14 +378,22 @@
         });
 
         // Show/hide GCash fields based on payment method selection
-        document.getElementById('paymentMethod').addEventListener('change', function() {
+        const paymentMethodSelect = document.getElementById('paymentMethod');
+        const paymentMethodDisplay = document.getElementById('payment-method-display');
+
+        paymentMethodSelect.addEventListener('change', function() {
             const gcashInfo = document.getElementById('gcashInfo');
             if (this.value === 'gcash') {
                 gcashInfo.style.display = 'block';
+                paymentMethodDisplay.textContent = 'GCash';
             } else {
                 gcashInfo.style.display = 'none';
+                paymentMethodDisplay.textContent = 'Cash on Delivery';
             }
         });
+
+        // Initialize payment method display based on selected value
+        paymentMethodDisplay.textContent = paymentMethodSelect.value === 'gcash' ? 'GCash' : 'Cash on Delivery';
     });
 </script>
 
