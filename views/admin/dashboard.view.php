@@ -191,7 +191,6 @@
                                         <th class="border-0">Price</th>
                                         <th class="border-0">Stock</th>
                                         <th class="border-0">Added Date</th>
-                                        <th class="border-0">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -231,19 +230,6 @@
                                                 </span>
                                             </td>
                                             <td><?php echo date('M d, Y', strtotime($product['created_at'])); ?></td>
-                                            <td>
-                                                <div class="btn-group">
-                                                    <a href="/add-products?edit=<?php echo $product['product_id']; ?>"
-                                                        class="btn btn-sm btn-outline-secondary">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </a>
-                                                    <button type="button"
-                                                        class="btn btn-sm btn-outline-danger"
-                                                        onclick="confirmDelete(<?php echo $product['product_id']; ?>)">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -255,32 +241,3 @@
         </div>
     </div>
 </div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Delete</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                Are you sure you want to delete this product?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteForm" action="/admin/products/delete" method="POST" style="display: inline;">
-                    <input type="hidden" name="product_id" id="deleteProductId">
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    function confirmDelete(productId) {
-        document.getElementById('deleteProductId').value = productId;
-        new bootstrap.Modal(document.getElementById('deleteModal')).show();
-    }
-</script>
