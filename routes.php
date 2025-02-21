@@ -22,7 +22,6 @@ $router->add('POST', '/register', 'AuthController@register');
 $router->add('GET', '/logout', 'AuthController@logout');
 
 // Admin routes
-// Admin routes
 $router->add('GET', '/dashboard', 'AdminController@dashboard')->middleware(new Authenticated(new Session()));
 $router->add('GET', '/add-products', 'AdminController@addProducts')->middleware(new Authenticated(new Session()));
 $router->add('POST', '/add-products/create', 'AdminController@createProduct')->middleware(new Authenticated(new Session()));
@@ -56,6 +55,12 @@ $router->add('GET', '/contact', 'CustomerController@contact')
 // Order routes
 $router->add('POST', '/api/orders', 'OrderController@createOrder');
 $router->add('GET', '/order-confirmation', 'OrderController@confirmOrder');
+
+// Cart API routes
+$router->add('POST', '/api/cart/add', 'CartController@addToCart');
+$router->add('GET', '/api/cart/items', 'CartController@getCartItems');
+$router->add('GET', '/api/cart/count', 'CartController@getCartCount');
+$router->add('POST', '/api/cart/sync', 'CartController@syncCart');
 
 // Error route
 $router->add('GET', '/error', 'ErrorController@showError');

@@ -82,77 +82,72 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize cart from localStorage
-        let cart = JSON.parse(localStorage.getItem('cart')) || [];
-        updateCartCount();
-
-        // Add to cart functionality
         document.querySelectorAll('.add-to-cart').forEach(button => {
             button.addEventListener('click', function() {
                 const productId = this.dataset.productId;
-                const productName = this.dataset.productName;
-                const productPrice = parseFloat(this.dataset.productPrice);
+                const formData = new FormData();
+                formData.append('product_id', productId);
 
-                // Check if product is already in cart
-                const existingItem = cart.find(item => item.id === productId);
-
-                if (existingItem) {
-                    existingItem.quantity += 1;
-                } else {
-                    cart.push({
-                        id: productId,
-                        name: productName,
-                        price: productPrice,
-                        quantity: 1
-                    });
-                }
-
-                // Save to localStorage
-                localStorage.setItem('cart', JSON.stringify(cart));
-                updateCartCount();
-
-                // Show success message
-                showNotification('Product added to cart!');
+                fetch('/api/cart/add', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Product added to cart!');
+                        updateCartCount();
+                    } else {
+                        showNotification('Failed to add product to cart.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Failed to add product to cart.');
+                });
             });
         });
 
         function updateCartCount() {
-            const cartCount = document.getElementById('cart-count');
-            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-
-            if (totalItems > 0) {
-                cartCount.style.display = 'block';
-                cartCount.textContent = totalItems;
-            } else {
-                cartCount.style.display = 'none';
-            }
+            fetch('/api/cart/count')
+                .then(response => response.json())
+                .then(data => {
+                    const cartCountElement = document.getElementById('cart-count');
+                    cartCountElement.textContent = data.count;
+                    cartCountElement.style.display = data.count > 0 ? 'inline' : 'none';
+                });
         }
 
         function showNotification(message) {
-            // Create notification element
             const notification = document.createElement('div');
             notification.className = 'position-fixed top-0 end-0 p-3';
             notification.style.zIndex = '1050';
 
             notification.innerHTML = `
-            <div class="toast show" role="alert">
-                <div class="toast-header">
-                    <strong class="me-auto">Cart</strong>
-                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                <div class="toast show" role="alert">
+                    <div class="toast-header">
+                        <strong class="me-auto">Cart</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
                 </div>
-                <div class="toast-body">
-                    ${message}
-                </div>
-            </div>
-        `;
+            `;
 
             document.body.appendChild(notification);
 
-            // Remove after 3 seconds
             setTimeout(() => {
                 notification.remove();
             }, 3000);
         }
+
+        updateCartCount();
     });
 </script>
 
