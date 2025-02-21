@@ -10,6 +10,7 @@ use Core\Session;
 use Models\User;
 use mysqli;
 use Exception;
+use Models\Cart;
 
 class Router
 {
@@ -66,6 +67,7 @@ class Router
                 $session = new Session();
                 $validator = new \Core\Validator();
                 $user = new User($db);
+                $cart = new Cart($db, $session);
 
                 // Handle both namespaced and non-namespaced controllers
                 $controllerClass = (strpos($controller, '\\') !== false) ? $controller : $controllerClass;
@@ -74,7 +76,7 @@ class Router
                     throw new Exception("Controller class {$controllerClass} not found");
                 }
 
-                $controllerInstance = new $controllerClass($db, $session, $validator, $user);
+                $controllerInstance = new $controllerClass($db, $session, $validator, $user, $cart);
 
                 if (!method_exists($controllerInstance, $action)) {
                     throw new Exception("Method {$action} not found in {$controllerClass}");

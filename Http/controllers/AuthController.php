@@ -5,6 +5,7 @@ use Core\ValidationException;
 use Core\Session;
 use Models\User;
 use Models\UserProfiles;
+use Models\Cart;
 
 class AuthController
 {
@@ -13,14 +14,16 @@ class AuthController
     private $validator;
     private $user;
     private $userProfiles;
+    private $cart;
 
-    public function __construct(mysqli $db, Session $session, Validator $validator, User $user)
+    public function __construct(mysqli $db, Session $session, Validator $validator, User $user, Cart $cart)
     {
         $this->db = $db;
         $this->session = $session;
         $this->validator = $validator;
         $this->user = $user;
         $this->userProfiles = new UserProfiles($db);
+        $this->cart = $cart;
     }
 
     public function register()
@@ -85,15 +88,11 @@ class AuthController
                     exit();
                 }
 
-                // Validate password strength
-                // if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/', $data['password'])) { 
-                //     $this->session->set('password_error', 'Password must contain at least 8 characters, including uppercase, lowercase, and numbers');
-                //     header('Location: /register');
-                //     exit();
-                // }
-
                 // Create user with complete data
                 $userId = $this->user->create($data);
+
+                // Create cart for new user
+                $this->cart->getOrCreateCart($userId);
 
                 $this->session->set('success', 'Registration successful! Please login to continue.');
                 header('Location: /login');
@@ -152,9 +151,13 @@ class AuthController
                     exit();
                 }
 
+                // Get or create cart for user
+                $cartId = $this->cart->getOrCreateCart($user['user_id']);
+
                 // Set session variables
                 $this->session->set('user_id', $user['user_id']);
                 $this->session->set('user_role', $user['role']);
+                $this->session->set('cart_id', $cartId);
                 $this->session->set('authenticated', true);
 
                 // Redirect based on role
@@ -180,11 +183,12 @@ class AuthController
         // Unset all session variables
         $this->session->remove('user_id');
         $this->session->remove('user_role');
+        $this->session->remove('cart_id');
         $this->session->remove('authenticated');
 
         // Destroy the session completely
-        session_unset(); // Unset all session variables
-        session_destroy(); // Destroy the session
+        session_unset();
+        session_destroy();
 
         // Ensure the session cookie is deleted
         setcookie(session_name(), '', time() - 3600, '/');
@@ -193,5 +197,4 @@ class AuthController
         header('Location: /login');
         exit();
     }
-
 }

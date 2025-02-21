@@ -1,5 +1,7 @@
 <?php
 
+namespace Models;
+
 class Cart {
     private $conn;
 
@@ -44,7 +46,40 @@ class Cart {
         }
     }
 
-    private function getOrCreateCart($userId) {
+    public function submitCartItems($userId, $cartItems) {
+        $cartId = $this->getOrCreateCart($userId);
+        
+        // Begin transaction
+        $this->conn->begin_transaction();
+        
+        try {
+            // Clear existing cart items
+            $this->clearCartItems($cartId);
+            
+            // Add new items from form submission
+            foreach ($cartItems as $item) {
+                $productId = $item['product_id'];
+                $quantity = $item['quantity'];
+                
+                $stmt = $this->conn->prepare('
+                    INSERT INTO CartItems (cart_id, product_id, quantity, price_at_time, added_at) 
+                    VALUES (?, ?, ?, (SELECT price FROM Products WHERE product_id = ?), NOW())
+                ');
+                $stmt->bind_param('iiii', $cartId, $productId, $quantity, $productId);
+                $stmt->execute();
+            }
+            
+            // Commit transaction
+            $this->conn->commit();
+            return true;
+        } catch (\Exception $e) {
+            // Rollback transaction on error
+            $this->conn->rollback();
+            throw $e;
+        }
+    }
+
+    public function getOrCreateCart($userId) {
         // Check for existing active cart
         $stmt = $this->conn->prepare('
             SELECT cart_id FROM Cart 
@@ -80,5 +115,26 @@ class Cart {
         $stmt->bind_param('i', $userId);
         $stmt->execute();
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function clearCart($cartId) {
+        // Update cart status to 'completed'
+        $stmt = $this->conn->prepare('
+            UPDATE Cart 
+            SET status = "completed", updated_at = NOW()
+            WHERE cart_id = ?
+        ');
+        $stmt->bind_param('i', $cartId);
+        return $stmt->execute();
+    }
+
+    private function clearCartItems($cartId) {
+        // Delete all items from cart
+        $stmt = $this->conn->prepare('
+            DELETE FROM CartItems 
+            WHERE cart_id = ?
+        ');
+        $stmt->bind_param('i', $cartId);
+        return $stmt->execute();
     }
 }

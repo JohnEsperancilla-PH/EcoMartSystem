@@ -1,6 +1,10 @@
 <?php
 // Models/Orders.php
 
+namespace Models;
+
+use Exception;
+
 class Orders {
     private $conn;
 

@@ -1,4 +1,9 @@
 <?php
+
+namespace Core;
+
+use mysqli;
+
 class Database
 {
     private $host = "localhost";

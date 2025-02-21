@@ -2,6 +2,8 @@
 
 require_once __DIR__ . '/../Core/Database.php';
 
+use Core\Database;
+
 class Categories
 {
     private $conn;
