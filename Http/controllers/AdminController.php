@@ -19,9 +19,11 @@ class AdminController
             exit();
         }
 
+        $categoryFilter = $_GET['category'] ?? '';
+
         // Get all required dashboard data
         $categoryStats = $this->getCategoryStats();
-        $products = $this->getProducts();
+        $products = $this->getProducts(1, ['category' => $categoryFilter]);
         $totalRevenue = $this->getTotalRevenue();
         $totalOrdersCount = $this->getTotalOrders();
         $totalCustomers = $this->getTotalCustomers();
@@ -78,6 +80,7 @@ class AdminController
     private function getCategoryStats()
     {
         $query = "SELECT 
+        c.category_id,
         c.name as category_name,
         COUNT(p.product_id) as total_products
         FROM Categories c
@@ -95,17 +98,23 @@ class AdminController
 
         // Base query
         $query = "SELECT 
-            p.*, 
-            c.name as category_name
+        p.*, 
+        c.name as category_name
         FROM Products p
         JOIN Categories c ON p.category_id = c.category_id
         WHERE 1=1";
 
-        // Add filters
+        $params = [];
+        $types = "";
+
+        // Add category filter
         if (!empty($filters['category'])) {
-            $query .= " AND p.category_id = " . intval($filters['category']);
+            $query .= " AND c.name = ?";
+            $params[] = $filters['category'];
+            $types .= "s";
         }
 
+        // Add stock status filter
         if (!empty($filters['stock_status'])) {
             switch ($filters['stock_status']) {
                 case 'out_of_stock':
@@ -120,16 +129,38 @@ class AdminController
             }
         }
 
+        // Add search filter
         if (!empty($filters['search'])) {
-            $search = $this->db->real_escape_string($filters['search']);
-            $query .= " AND (p.name LIKE '%$search%' OR p.description LIKE '%$search%')";
+            $query .= " AND (p.name LIKE ? OR p.description LIKE ?)";
+            $searchTerm = "%" . $filters['search'] . "%";
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $types .= "ss";
         }
 
         // Add pagination
-        $query .= " ORDER BY p.created_at DESC LIMIT $offset, $this->itemsPerPage";
+        $query .= " ORDER BY p.created_at DESC LIMIT ?, ?";
+        $params[] = $offset;
+        $params[] = $this->itemsPerPage;
+        $types .= "ii";
 
-        $result = $this->db->query($query);
-        return $result->fetch_all(MYSQLI_ASSOC);
+        // Prepare and execute the statement
+        $stmt = $this->db->prepare($query);
+
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $products = $result->fetch_all(MYSQLI_ASSOC);
+
+        // If no products found, set a flash message
+        if (empty($products) && !empty($filters['category'])) {
+            $_SESSION['info'] = "No products found in category '" . htmlspecialchars($filters['category']) . "'";
+        }
+
+        return $products;
     }
 
     private function getTotalProductCount()
@@ -154,7 +185,7 @@ class AdminController
                     $query .= " AND p.stock_quantity <= 0";
                     break;
                 case 'low_stock':
-                    $query .= " AND p.stock_quantity > 0 AND p.stock_quantity <= 10";
+                    $query .= " AND p.stock_quantity > 0 AND p.stock_quantity >= 10";
                     break;
                 case 'in_stock':
                     $query .= " AND p.stock_quantity > 10";
