@@ -61,11 +61,11 @@
                                     <div class="card-body d-flex flex-column">
                                         <h5 class="card-title text-truncate"><?= htmlspecialchars($product['name']) ?></h5>
                                         <p class="fw-bold text-primary mb-2">₱<?= number_format($product['price'], 2) ?></p>
-                                        <button class="btn btn-primary btn-sm mt-auto w-100 add-to-cart"
+                                        <button class="btn btn-primary btn-sm mt-auto w-100 add-to-order"
                                             data-product-id="<?= $product['product_id'] ?>"
                                             data-product-name="<?= htmlspecialchars($product['name']) ?>"
                                             data-product-price="<?= $product['price'] ?>">
-                                            <i class="bi bi-bag-check"></i>Add to Cart
+                                            <i class="bi bi-bag-check"></i>Add to Order
                                         </button>
                                     </div>
                                 </div>
@@ -81,74 +81,33 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.add-to-cart').forEach(button => {
-            button.addEventListener('click', function() {
-                const productId = this.dataset.productId;
-                const formData = new FormData();
-                formData.append('product_id', productId);
+document.addEventListener('DOMContentLoaded', function() {
+    const addToOrderButtons = document.querySelectorAll('.add-to-order');
+    const orderList = JSON.parse(localStorage.getItem('orderList')) || [];
 
-                fetch('/api/cart/add', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        showNotification('Product added to cart!');
-                        updateCartCount();
-                    } else {
-                        showNotification('Failed to add product to cart.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showNotification('Failed to add product to cart.');
-                });
-            });
+    addToOrderButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            const productName = this.dataset.productName;
+            const productPrice = this.dataset.productPrice;
+
+            const product = { id: productId, name: productName, price: productPrice };
+            orderList.push(product);
+            localStorage.setItem('orderList', JSON.stringify(orderList));
+            alert('Product added to order list');
         });
-
-        function updateCartCount() {
-            fetch('/api/cart/count')
-                .then(response => response.json())
-                .then(data => {
-                    const cartCountElement = document.getElementById('cart-count');
-                    cartCountElement.textContent = data.count;
-                    cartCountElement.style.display = data.count > 0 ? 'inline' : 'none';
-                });
-        }
-
-        function showNotification(message) {
-            const notification = document.createElement('div');
-            notification.className = 'position-fixed top-0 end-0 p-3';
-            notification.style.zIndex = '1050';
-
-            notification.innerHTML = `
-                <div class="toast show" role="alert">
-                    <div class="toast-header">
-                        <strong class="me-auto">Cart</strong>
-                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-                    </div>
-                    <div class="toast-body">
-                        ${message}
-                    </div>
-                </div>
-            `;
-
-            document.body.appendChild(notification);
-
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-
-        updateCartCount();
     });
+
+    const orderOverview = document.getElementById('order-overview');
+    if (orderOverview) {
+        orderOverview.innerHTML = orderList.map(product => `
+            <div>
+                <h3>${product.name}</h3>
+                <p>Price: ${product.price}</p>
+            </div>
+        `).join('');
+    }
+});
 </script>
 
 <?php include __DIR__ . '/../components/footer.php'; ?>

@@ -5,8 +5,8 @@
 
     <div class="card p-4 mb-4">
         <h3>Order Overview</h3>
-        <div id="cart-items" class="mb-3">
-            <!-- Cart items will be populated here via JavaScript -->
+        <div id="order-items" class="mb-3">
+            <!-- Order items will be populated here via JavaScript -->
         </div>
         <div class="border-top pt-3">
             <p><strong>Payment Method:</strong> <span id="payment-method-display">Cash on Delivery</span></p>
@@ -214,36 +214,34 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Load cart data from localStorage
-        const cart = JSON.parse(localStorage.getItem('cart')) || [];
-        const cartItemsContainer = document.getElementById('cart-items');
+        // Load order data from localStorage
+        const orderList = JSON.parse(localStorage.getItem('orderList')) || [];
+        const orderItemsContainer = document.getElementById('order-items');
         const grandTotalElement = document.getElementById('grand-total');
         let itemToRemoveIndex = null; // Store the index of the item to remove
 
-        // Display cart items
-        displayCartItems();
+        // Display order items
+        displayOrderItems();
 
-        function displayCartItems() {
-            if (cart.length === 0) {
-                cartItemsContainer.innerHTML = '<p class="text-muted">Your cart is empty</p>';
+        function displayOrderItems() {
+            if (orderList.length === 0) {
+                orderItemsContainer.innerHTML = '<p class="text-muted">Your order list is empty</p>';
                 grandTotalElement.textContent = '₱0.00';
                 return;
             }
 
             let html = '<div class="table-responsive"><table class="table">';
-            html += '<thead><tr><th>Product</th><th>Quantity</th><th>Price</th><th>Action</th></tr></thead><tbody>';
+            html += '<thead><tr><th>Product</th><th>Price</th><th>Action</th></thead><tbody>';
 
             let grandTotal = 0;
 
-            cart.forEach((item, index) => {
-                const itemTotal = item.price * item.quantity;
-                grandTotal += itemTotal;
+            orderList.forEach((item, index) => {
+                grandTotal += parseFloat(item.price);
 
                 html += `
                     <tr>
                         <td>${item.name}</td>
-                        <td>${item.quantity}</td>
-                        <td>₱${item.price.toFixed(2)}</td>
+                        <td>₱${parseFloat(item.price).toFixed(2)}</td>
                         <td>
                             <button class="btn btn-danger btn-sm remove-item-btn" data-index="${index}">Remove</button>
                         </td>
@@ -252,7 +250,7 @@
             });
 
             html += '</tbody></table></div>';
-            cartItemsContainer.innerHTML = html;
+            orderItemsContainer.innerHTML = html;
             grandTotalElement.textContent = `₱${grandTotal.toFixed(2)}`;
 
             // Add event listeners to the remove buttons
@@ -277,29 +275,21 @@
         });
 
         function removeOneItem(index) {
-            if (cart[index].quantity > 1) {
-                cart[index].quantity--;
-                localStorage.setItem('cart', JSON.stringify(cart));
-                displayCartItems();
-                showModal('One item removed. Quantity updated.');
-            } else {
-                const item = cart[index];
-                cart.splice(index, 1);
-                localStorage.setItem('cart', JSON.stringify(cart));
-                displayCartItems();
-                showModal(`${item.name} has been removed.`);
-            }
+            const item = orderList[index];
+            orderList.splice(index, 1);
+            localStorage.setItem('orderList', JSON.stringify(orderList));
+            displayOrderItems();
+            showModal(`${item.name} has been removed.`);
         }
 
         // Form validation and submission
         const form = document.getElementById('checkout-form');
 
-        // Update the form submission event listener in process-order.view.php
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            if (cart.length === 0) {
-                alert('Your cart is empty. Please add items before checking out.');
+            if (orderList.length === 0) {
+                alert('Your order list is empty. Please add items before checking out.');
                 return;
             }
 
@@ -325,9 +315,8 @@
                     gcashRef: formData.get('gcash_ref'),
                     gcashPhone: formData.get('gcash_phone')
                 },
-                items: cart.map(item => ({
+                items: orderList.map(item => ({
                     id: item.id,
-                    quantity: item.quantity,
                     price: item.price
                 })),
                 termsAgreed: formData.get('terms_agree') === 'on'
@@ -348,8 +337,8 @@
                     throw new Error(result.message || 'Order submission failed');
                 }
 
-                // Clear cart after successful order
-                localStorage.removeItem('cart');
+                // Clear order list after successful order
+                localStorage.removeItem('orderList');
 
                 // Show success message
                 showModal('Order placed successfully!');

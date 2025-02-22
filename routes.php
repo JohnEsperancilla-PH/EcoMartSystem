@@ -19,7 +19,9 @@ $router->add('GET', '/login', 'AuthController@login');
 $router->add('POST', '/login', 'AuthController@login');
 $router->add('GET', '/register', 'AuthController@register');
 $router->add('POST', '/register', 'AuthController@register');
-$router->add('GET', '/logout', 'AuthController@logout');
+$router->add('GET', '/logout', 'AuthController@logout')->middleware(function() {
+    echo "<script>localStorage.removeItem('orderList');</script>";
+});
 
 // Admin routes
 $router->add('GET', '/dashboard', 'AdminController@dashboard')->middleware(new Authenticated(new Session()));
@@ -32,7 +34,6 @@ $router->add('GET', '/order-history', 'AdminController@orders')->middleware(new 
 $router->add('POST', '/create', 'AdminController@createProduct')->middleware(new Authenticated(new Session()));
 $router->add('POST', '/update', 'AdminController@updateProduct')->middleware(new Authenticated(new Session()));
 $router->add('POST', '/delete', 'AdminController@deleteProduct')->middleware(new Authenticated(new Session()));
-
 
 // Client routes
 $router->add('GET', '/shop', 'CustomerController@shop')
@@ -51,16 +52,9 @@ $router->add('GET', '/contact', 'CustomerController@contact')
     ->middleware(new Authenticated($session))
     ->middleware(new RoleMiddleware($session, ['customer']));
 
-
 // Order routes
 $router->add('POST', '/api/orders', 'OrderController@createOrder');
 $router->add('GET', '/order-confirmation', 'OrderController@confirmOrder');
-
-// Cart API routes
-$router->add('POST', '/api/cart/add', 'CartController@addToCart');
-$router->add('GET', '/api/cart/items', 'CartController@getCartItems');
-$router->add('GET', '/api/cart/count', 'CartController@getCartCount');
-$router->add('POST', '/api/cart/sync', 'CartController@syncCart');
 
 // Error route
 $router->add('GET', '/error', 'ErrorController@showError');
