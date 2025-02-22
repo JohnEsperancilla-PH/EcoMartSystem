@@ -287,7 +287,7 @@
         // Form validation and submission
         const form = document.getElementById('checkout-form');
 
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
 
             if (orderList.length === 0) {
