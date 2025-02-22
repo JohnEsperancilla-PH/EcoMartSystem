@@ -24,86 +24,64 @@ class OrderController {
         $this->session = new Session();
     }
 
-    public function createOrder() {
+    public function createOrder()
+    {
         try {
-            // Validate request
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 http_response_code(405);
                 echo json_encode(['error' => 'Method not allowed']);
                 return;
             }
 
-            // Get JSON data from request body
+            // Get JSON data
             $data = json_decode(file_get_contents('php://input'), true);
-
             if (!$data) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Invalid request data']);
                 return;
             }
 
-            // Prepare customer data
-            $customerData = $data['customer'];
-            
-            // Create the order data structure
-            $orderData = [
-                'user_id' => $this->session->get('user_id') ?? null,
-                'customer_name' => $customerData['fullName'],
-                'customer_email' => $customerData['email'],
-                'customer_contact' => $customerData['contact'],
-                'delivery_address' => $customerData['address'],
-                'total_amount' => 0,
-                'status' => 'pending',
-                'payment_method' => $data['payment']['method'],
-                'gcash_ref' => $data['payment']['gcashRef'] ?? null,
-                'gcash_phone' => $data['payment']['gcashPhone'] ?? null
-            ];
-
-            // Fetch cart items for the user
-            $userId = $this->session->get('user_id');
-            if (!$userId) {
-                throw new Exception('User not authenticated');
+            // Validate required fields
+            $required = ['customer', 'payment', 'items'];
+            foreach ($required as $field) {
+                if (!isset($data[$field])) {
+                    http_response_code(400);
+                    echo json_encode(['error' => "Missing required field: {$field}"]);
+                    return;
+                }
             }
 
-            $cartItems = $this->cartModel->getCartItems($userId);
-            if (empty($cartItems)) {
-                throw new Exception('Cart is empty');
-            }
-
-            // Calculate total amount
-            $orderData['total_amount'] = array_reduce($cartItems, function($sum, $item) {
-                return $sum + ($item['price_at_time'] * $item['quantity']);
+            // Calculate total amount from items
+            $totalAmount = array_reduce($data['items'], function ($sum, $item) {
+                return $sum + ($item['price'] * ($item['quantity'] ?? 1));
             }, 0);
 
-            // Begin transaction
-            $this->db->begin_transaction();
+            // Create order data structure
+            $orderData = [
+                'user_id' => $this->session->get('user_id'),
+                'customer_name' => $data['customer']['fullName'],
+                'customer_email' => $data['customer']['email'],
+                'customer_contact' => $data['customer']['contact'],
+                'delivery_address' => $data['customer']['address'],
+                'total_amount' => $totalAmount,
+                'status' => 'pending',
+                'payment_method' => $data['payment']['method'],
+                'gcash_ref' => $data['payment']['gcashRef'],
+                'gcash_phone' => $data['payment']['gcashPhone']
+            ];
 
-            try {
-                // Create order
-                $orderId = $this->orderModel->createOrder($orderData, $cartItems);
+            // Create the order
+            $orderId = $this->orderModel->createOrder($orderData, $data['items']);
 
-                // Clear the cart after order is placed
-                $cartId = $this->session->get('cart_id');
-                $this->cartModel->clearCart($cartId);
-
-                // Commit transaction
-                $this->db->commit();
-
-                // Return success response
-                http_response_code(201);
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Order created successfully',
-                    'orderId' => $orderId
-                ]);
-
-            } catch (Exception $e) {
-                // Rollback transaction on error
-                $this->db->rollback();
-                throw $e;
-            }
-
+            // Return success response
+            http_response_code(201);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Order created successfully',
+                'orderId' => $orderId
+            ]);
         } catch (Exception $e) {
+            error_log('Order creation error: ' . $e->getMessage());
             http_response_code(500);
             echo json_encode([
                 'error' => 'Failed to create order',

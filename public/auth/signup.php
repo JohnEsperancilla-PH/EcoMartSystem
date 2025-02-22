@@ -17,7 +17,7 @@ $validator = new Validator();
 $user = new User($db->getConnection());
 
 // Initialize AuthController
-$authController = new AuthController($db->getConnection(), $session, $validator, $user);
+$authController = new AuthController($db->getConnection(), $session, $validator, $user, $cart);
 
 // Handle POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

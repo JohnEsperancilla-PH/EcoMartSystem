@@ -37,23 +37,15 @@
 
         <!-- Main Content -->
         <div class="col-lg-10">
-            <!-- Order Placed Modal -->
-            <div class="modal fade" id="orderPlacedModal" tabindex="-1" aria-labelledby="orderPlacedModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-top-right">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="orderPlacedModalLabel">Order Placed</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            Product added to order list.
-                        </div>
-                    </div>
-                </div>
-            </div>
             <div class="bg-white rounded-3 p-4 shadow-sm overflow-auto vh-75">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="h4"><?= $selectedCategory ? htmlspecialchars($selectedCategory) : 'All Products' ?></h2>
+                    <a href="/process-order" class="btn btn-primary position-relative">
+                        <i class="fas fa-shopping-cart me-2"></i>Cart
+                        <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+                            0
+                        </span>
+                    </a>
                     <!-- Removed Cart Button -->
                 </div>
 
@@ -90,33 +82,91 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const addToOrderButtons = document.querySelectorAll('.add-to-order');
-    const orderList = JSON.parse(localStorage.getItem('orderList')) || [];
+    document.addEventListener('DOMContentLoaded', function() {
+        const addToOrderButtons = document.querySelectorAll('.add-to-order');
+        const cartCountBadge = document.getElementById('cart-count');
+        let orderList = JSON.parse(localStorage.getItem('orderList')) || [];
 
-    addToOrderButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const productId = this.dataset.productId;
-            const productName = this.dataset.productName;
-            const productPrice = this.dataset.productPrice;
+        // Update cart count on page load
+        updateCartCount();
 
-            const product = { id: productId, name: productName, price: productPrice };
-            orderList.push(product);
-            localStorage.setItem('orderList', JSON.stringify(orderList));
-            $('#orderPlacedModal').modal('show');
+        addToOrderButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const productId = this.dataset.productId;
+                const productName = this.dataset.productName;
+                const productPrice = this.dataset.productPrice;
+
+                const product = {
+                    id: productId,
+                    name: productName,
+                    price: productPrice
+                };
+
+                orderList.push(product);
+                localStorage.setItem('orderList', JSON.stringify(orderList));
+
+                setTimeout(() => {
+                    orderPlacedModal.hide();
+                }, 2000);
+
+                // Update cart count
+                updateCartCount();
+
+                // Create and show toast notification
+                showNotification(`${productName} added to cart`);
+            });
         });
-    });
 
-    const orderOverview = document.getElementById('order-overview');
-    if (orderOverview) {
-        orderOverview.innerHTML = orderList.map(product => `
-            <div>
-                <h3>${product.name}</h3>
-                <p>Price: ${product.price}</p>
+        function updateCartCount() {
+            const count = orderList.length;
+            if (count > 0) {
+                cartCountBadge.style.display = 'inline-block';
+                cartCountBadge.textContent = count;
+            } else {
+                cartCountBadge.style.display = 'none';
+            }
+        }
+
+        function showNotification(message) {
+            // Create toast container if it doesn't exist
+            let toastContainer = document.querySelector('.toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+                document.body.appendChild(toastContainer);
+            }
+
+            // Create toast element
+            const toastHtml = `
+            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <i class="fas fa-shopping-cart me-2"></i>
+                    <strong class="me-auto">Cart Update</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
             </div>
-        `).join('');
-    }
-});
+        `;
+
+            // Add toast to container
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+
+            // Initialize and show the toast
+            const toastElement = toastContainer.lastElementChild;
+            const toast = new bootstrap.Toast(toastElement, {
+                autohide: true,
+                delay: 3000
+            });
+            toast.show();
+
+            // Remove toast after it's hidden
+            toastElement.addEventListener('hidden.bs.toast', () => {
+                toastElement.remove();
+            });
+        }
+    });
 </script>
 
 <?php include __DIR__ . '/../components/footer.php'; ?>

@@ -8,6 +8,7 @@ require_once __DIR__ . '/../../Models/User.php';
 
 use Core\Session;
 use Core\Validator;
+use Core\Database;
 use Models\User;
 
 $db = new Database();
@@ -15,7 +16,7 @@ $session = new Session();
 $validator = new Validator();
 $user = new User($db->getConnection());
 
-$authController = new AuthController($db->getConnection(), $session, $validator, $user);
+$authController = new AuthController($db->getConnection(), $session, $validator, $user, $cart);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = $authController->login();

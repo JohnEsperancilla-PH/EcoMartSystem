@@ -287,11 +287,14 @@
         // Form validation and submission
         const form = document.getElementById('checkout-form');
 
+        // Replace the form submission code in process-order.view.php with this:
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
+            console.log('Form submitted');
 
             if (orderList.length === 0) {
-                alert('Your order list is empty. Please add items before checking out.');
+                console.log('Showing empty order modal');
+                showModal('Your order list is empty. Please add items before checking out.');
                 return;
             }
 
@@ -301,11 +304,17 @@
                 return;
             }
 
+            // Show loading state
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+
             // Collect form data
             const formData = new FormData(form);
             const orderData = {
                 customer: {
-                    userId: window.currentUserId, // Ensure this is set correctly
+                    userId: window.currentUserId,
                     fullName: formData.get('full_name'),
                     email: formData.get('email'),
                     address: formData.get('address'),
@@ -314,14 +323,10 @@
                 },
                 payment: {
                     method: formData.get('payment_method'),
-                    gcashRef: formData.get('gcash_ref'),
-                    gcashPhone: formData.get('gcash_phone')
+                    gcashRef: formData.get('gcash_ref') || null,
+                    gcashPhone: formData.get('gcash_phone') || null
                 },
-                items: orderList.map(item => ({
-                    product_id: item.id,
-                    quantity: 1, // Add quantity field
-                    price_at_time: parseFloat(item.price)
-                })),
+                items: orderList,
                 termsAgreed: formData.get('terms_agree') === 'on'
             };
 
@@ -337,30 +342,46 @@
                 const result = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(result.message || 'Order submission failed');
+                    throw new Error(result.message || 'Failed to process order');
                 }
 
-                        // Clear order list after successful order
-                        localStorage.removeItem('orderList');
+                // Clear order list
+                localStorage.removeItem('orderList');
 
-                        // Show success message
-                        showModal('Order placed successfully!');
+                // Show success message and redirect
+                showModal('Order placed successfully! Redirecting to shop...');
 
-                        // Redirect after modal is closed
-                        const orderModal = document.getElementById('orderModal');
-                        orderModal.addEventListener('hidden.bs.modal', function() {
-                            window.location.href = `/order-confirmation?id=${result.orderId}`;
-                        });
+                // Redirect after 2 seconds
+                setTimeout(() => {
+                    window.location.href = '/shop';
+                }, 2000);
 
             } catch (error) {
-                showModal('There was an error processing your order: ' + error.message);
-                    }
+                showModal('Error: ' + error.message);
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
+            }
         });
 
         function showModal(message) {
-            document.getElementById('orderModalBody').textContent = message;
-            let modal = new bootstrap.Modal(document.getElementById('orderModal'));
-            modal.show();
+            const modalElement = document.getElementById('orderModal');
+            const modalBody = document.getElementById('orderModalBody');
+
+            if (!modalElement || !modalBody) {
+                console.error('Modal elements not found');
+                alert(message); // Fallback if modal elements don't exist
+                return;
+            }
+
+            modalBody.textContent = message;
+
+            try {
+                const modalInstance = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+                modalInstance.show();
+            } catch (error) {
+                console.error('Error showing modal:', error);
+                alert(message); // Fallback if Bootstrap fails
+            }
         }
 
         // Update delivery info display when address is entered

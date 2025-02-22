@@ -53,7 +53,10 @@ $router->add('GET', '/contact', 'CustomerController@contact')
     ->middleware(new RoleMiddleware($session, ['customer']));
 
 // Order routes
-$router->add('POST', '/api/orders', 'OrderController@createOrder');
+// Add this with your other routes
+$router->add('POST', '/api/orders', 'OrderController@createOrder')
+    ->middleware(new Authenticated($session))
+    ->middleware(new RoleMiddleware($session, ['customer']));
 $router->add('GET', '/order-confirmation', 'OrderController@confirmOrder');
 
 // Error route
