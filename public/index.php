@@ -23,6 +23,13 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Initialize cart for admin
+if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
+    if (!isset($_SESSION['cart'])) {
+        $_SESSION['cart'] = [];
+    }
+}
+
 try {
     $router->dispatch($method, $uri);
 } catch (Exception $e) {

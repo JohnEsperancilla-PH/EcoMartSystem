@@ -1,5 +1,7 @@
 <?php
 
+use Core\Database;
+
 class AdminController
 {
     private $db;

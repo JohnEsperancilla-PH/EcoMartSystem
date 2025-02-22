@@ -45,7 +45,13 @@ class Router
             if ($route['method'] == $method && $route['uri'] == $uri) {
                 // Execute middleware
                 foreach ($route['middleware'] as $middleware) {
-                    $middleware->handle();
+                    if (is_callable($middleware)) {
+                        $middleware();
+                    } elseif (method_exists($middleware, 'handle')) {
+                        $middleware->handle();
+                    } else {
+                        throw new Exception("Middleware must be a callable or an object with a handle method");
+                    }
                 }
 
                 [$controller, $action] = explode('@', $route['controller']);
