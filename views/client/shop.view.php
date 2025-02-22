@@ -37,15 +37,24 @@
 
         <!-- Main Content -->
         <div class="col-lg-10">
+            <!-- Order Placed Modal -->
+            <div class="modal fade" id="orderPlacedModal" tabindex="-1" aria-labelledby="orderPlacedModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-top-right">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="orderPlacedModalLabel">Order Placed</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Product added to order list.
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="bg-white rounded-3 p-4 shadow-sm overflow-auto vh-75">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="h4"><?= $selectedCategory ? htmlspecialchars($selectedCategory) : 'All Products' ?></h2>
-                    <a href="/process-order" class="btn btn-primary position-relative">
-                        <i class="fas fa-shopping-cart me-2"></i>Cart
-                        <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
-                            0
-                        </span>
-                    </a>
+                    <!-- Removed Cart Button -->
                 </div>
 
                 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
@@ -94,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const product = { id: productId, name: productName, price: productPrice };
             orderList.push(product);
             localStorage.setItem('orderList', JSON.stringify(orderList));
-            alert('Product added to order list');
+            $('#orderPlacedModal').modal('show');
         });
     });
 

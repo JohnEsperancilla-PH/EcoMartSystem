@@ -19,9 +19,16 @@
                     <li class="nav-item"><a class="nav-link text-white" href="/branches">Branches</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="/contact">Contact</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="/process-order">Order</a></li>
-                    <li class="nav-item"><a class="nav-link text-white" href="/logout">Logout</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="/logout" id="logout-link">Logout</a></li>
                 </ul>
             </div>
         </div>
     </nav>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+        document.getElementById('logout-link').addEventListener('click', function() {
+            localStorage.removeItem('orderList');
+        });
+    </script>
+</body>
+</html>

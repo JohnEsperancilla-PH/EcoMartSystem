@@ -19,7 +19,6 @@
                 <div class="card-body">
                     <h5 class="card-title">Product 1</h5>
                     <p class="card-text">$10.00</p>
-                    <button class="btn btn-primary">Add to Cart</button>
                 </div>
             </div>
         </div>
@@ -29,7 +28,6 @@
                 <div class="card-body">
                     <h5 class="card-title">Product 2</h5>
                     <p class="card-text">$15.00</p>
-                    <button class="btn btn-primary">Add to Cart</button>
                 </div>
             </div>
         </div>
@@ -39,7 +37,6 @@
                 <div class="card-body">
                     <h5 class="card-title">Product 1</h5>
                     <p class="card-text">$10.00</p>
-                    <button class="btn btn-primary">Add to Cart</button>
                 </div>
             </div>
         </div>
