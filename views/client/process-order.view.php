@@ -197,11 +197,15 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="confirmationModalLabel">Confirmation</h5>
+                <h5 class="modal-title" id="confirmationModalLabel">Remove Item</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Are you sure you want to remove this item?
+                <p>Are you sure you want to remove this item?</p>
+                <div id="remove-quantity-input" style="display: none;">
+                    <label for="quantityToRemove" class="form-label">Quantity to Remove:</label>
+                    <input type="number" class="form-control" id="quantityToRemove" min="1" value="1">
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -213,16 +217,14 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Ensure currentUserId is available
         window.currentUserId = <?php echo json_encode($_SESSION['user_id']); ?>;
 
         // Load order data from localStorage
         const orderList = JSON.parse(localStorage.getItem('orderList')) || [];
         const orderItemsContainer = document.getElementById('order-items');
         const grandTotalElement = document.getElementById('grand-total');
-        let itemToRemoveIndex = null; // Store the index of the item to remove
+        let itemToRemoveIndex = null; 
 
-        // Display order items
         displayOrderItems();
 
         function displayOrderItems() {
@@ -233,17 +235,20 @@
             }
 
             let html = '<div class="table-responsive"><table class="table">';
-            html += '<thead><tr><th>Product</th><th>Price</th><th>Action</th></thead><tbody>';
+            html += '<thead><tr><th>Product</th><th>Quantity</th><th>Price</th><th>Subtotal</th><th>Action</th></thead><tbody>';
 
             let grandTotal = 0;
 
             orderList.forEach((item, index) => {
-                grandTotal += parseFloat(item.price);
+                const subtotal = parseFloat(item.price) * item.quantity;
+                grandTotal += subtotal;
 
                 html += `
                     <tr>
                         <td>${item.name}</td>
+                        <td>${item.quantity}</td>
                         <td>₱${parseFloat(item.price).toFixed(2)}</td>
+                        <td>₱${subtotal.toFixed(2)}</td>
                         <td>
                             <button class="btn btn-danger btn-sm remove-item-btn" data-index="${index}">Remove</button>
                         </td>
@@ -255,11 +260,22 @@
             orderItemsContainer.innerHTML = html;
             grandTotalElement.textContent = `₱${grandTotal.toFixed(2)}`;
 
-            // Add event listeners to the remove buttons
             const removeButtons = document.querySelectorAll('.remove-item-btn');
             removeButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     itemToRemoveIndex = this.dataset.index;
+                    const item = orderList[itemToRemoveIndex];
+                    const quantityToRemoveInput = document.getElementById('remove-quantity-input');
+                    const quantityToRemoveField = document.getElementById('quantityToRemove');
+
+                    if (item.quantity > 1) {
+                        quantityToRemoveInput.style.display = 'block';
+                        quantityToRemoveField.max = item.quantity;
+                        quantityToRemoveField.value = 1; //reset to 1 on each open
+                    } else {
+                        quantityToRemoveInput.style.display = 'none';
+                    }
+
                     const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
                     confirmationModal.show();
                 });
@@ -269,25 +285,37 @@
         // Confirmation Modal Logic
         document.getElementById('confirmRemove').addEventListener('click', function() {
             if (itemToRemoveIndex !== null) {
-                removeOneItem(itemToRemoveIndex);
+                const quantityToRemove = parseInt(document.getElementById('quantityToRemove').value);
+                removeQuantityFromItem(itemToRemoveIndex, quantityToRemove);
                 itemToRemoveIndex = null; // Reset the index
                 const confirmationModal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal')); // Get the modal instance
                 confirmationModal.hide(); // Close the modal
+
+                //Hide the quantity remove input as well
+                document.getElementById('remove-quantity-input').style.display = 'none';
             }
         });
 
-        function removeOneItem(index) {
+        function removeQuantityFromItem(index, quantity) {
             const item = orderList[index];
-            orderList.splice(index, 1);
+
+            if (quantity >= item.quantity) {
+                // Remove the entire item
+                orderList.splice(index, 1);
+                showModal(`${item.name} has been removed.`);
+            } else {
+                // Reduce the quantity
+                item.quantity -= quantity;
+                showModal(`Removed ${quantity} ${item.name}(s).`);
+            }
+
             localStorage.setItem('orderList', JSON.stringify(orderList));
             displayOrderItems();
-            showModal(`${item.name} has been removed.`);
         }
 
         // Form validation and submission
         const form = document.getElementById('checkout-form');
 
-        // Replace the form submission code in process-order.view.php with this:
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             console.log('Form submitted');
@@ -345,13 +373,10 @@
                     throw new Error(result.message || 'Failed to process order');
                 }
 
-                // Clear order list
                 localStorage.removeItem('orderList');
 
-                // Show success message and redirect
                 showModal('Order placed successfully! Redirecting to shop...');
 
-                // Redirect after 2 seconds
                 setTimeout(() => {
                     window.location.href = '/shop';
                 }, 2000);
@@ -369,7 +394,7 @@
 
             if (!modalElement || !modalBody) {
                 console.error('Modal elements not found');
-                alert(message); // Fallback if modal elements don't exist
+                alert(message); 
                 return;
             }
 
@@ -380,7 +405,7 @@
                 modalInstance.show();
             } catch (error) {
                 console.error('Error showing modal:', error);
-                alert(message); // Fallback if Bootstrap fails
+                alert(message); 
             }
         }
 

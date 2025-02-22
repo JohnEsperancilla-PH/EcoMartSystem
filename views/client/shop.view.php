@@ -96,13 +96,23 @@
                 const productName = this.dataset.productName;
                 const productPrice = this.dataset.productPrice;
 
-                const product = {
-                    id: productId,
-                    name: productName,
-                    price: productPrice
-                };
+                // Check if the product already exists in the orderList
+                const existingProductIndex = orderList.findIndex(item => item.id === productId);
 
-                orderList.push(product);
+                if (existingProductIndex !== -1) {
+                    // Product exists, increment quantity
+                    orderList[existingProductIndex].quantity++;
+                } else {
+                    // Product doesn't exist, add it with quantity 1
+                    const product = {
+                        id: productId,
+                        name: productName,
+                        price: productPrice,
+                        quantity: 1 // Initialize quantity to 1
+                    };
+                    orderList.push(product);
+                }
+
                 localStorage.setItem('orderList', JSON.stringify(orderList));
 
                 setTimeout(() => {
@@ -118,10 +128,15 @@
         });
 
         function updateCartCount() {
-            const count = orderList.length;
-            if (count > 0) {
+            //Calculate total quantity
+            let totalQuantity = 0;
+            orderList.forEach(item => {
+                totalQuantity += item.quantity;
+            });
+
+            if (totalQuantity > 0) {
                 cartCountBadge.style.display = 'inline-block';
-                cartCountBadge.textContent = count;
+                cartCountBadge.textContent = totalQuantity;
             } else {
                 cartCountBadge.style.display = 'none';
             }
@@ -137,8 +152,8 @@
             }
 
             // Create toast element
-            const toastHtml = `
-            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            const toastHtml =
+                `<div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
                 <div class="toast-header">
                     <i class="fas fa-shopping-cart me-2"></i>
                     <strong class="me-auto">Cart Update</strong>
@@ -147,8 +162,7 @@
                 <div class="toast-body">
                     ${message}
                 </div>
-            </div>
-        `;
+            </div>`;
 
             // Add toast to container
             toastContainer.insertAdjacentHTML('beforeend', toastHtml);
