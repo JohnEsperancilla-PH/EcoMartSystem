@@ -1,0 +1,9 @@
+RewriteEngine On
+
+# Redirect all requests to the appropriate PHP file
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^api/orders$ api/orders.php [L,QSA]
+
+# Add other routes as needed
+# RewriteRule ^api/another-endpoint$ api/another-endpoint.php [L,QSA]

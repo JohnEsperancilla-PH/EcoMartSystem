@@ -134,7 +134,6 @@
                                 class="form-control"
                                 id="gcashPhone"
                                 name="gcash_phone"
-                                required
                                 pattern="^9[0-9]{9}$"
                                 placeholder="9XXXXXXXXX">
                         </div>
@@ -214,6 +213,9 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Ensure currentUserId is available
+        window.currentUserId = <?php echo json_encode($_SESSION['user_id']); ?>;
+
         // Load order data from localStorage
         const orderList = JSON.parse(localStorage.getItem('orderList')) || [];
         const orderItemsContainer = document.getElementById('order-items');
@@ -285,7 +287,7 @@
         // Form validation and submission
         const form = document.getElementById('checkout-form');
 
-        form.addEventListener('submit', async function(e) {
+        form.addEventListener('submit', function(e) {
             e.preventDefault();
 
             if (orderList.length === 0) {
@@ -303,7 +305,7 @@
             const formData = new FormData(form);
             const orderData = {
                 customer: {
-                    userId: window.currentUserId, // Add this to your view
+                    userId: window.currentUserId, // Ensure this is set correctly
                     fullName: formData.get('full_name'),
                     email: formData.get('email'),
                     address: formData.get('address'),
@@ -316,8 +318,9 @@
                     gcashPhone: formData.get('gcash_phone')
                 },
                 items: orderList.map(item => ({
-                    id: item.id,
-                    price: item.price
+                    product_id: item.id,
+                    quantity: 1, // Add quantity field
+                    price_at_time: parseFloat(item.price)
                 })),
                 termsAgreed: formData.get('terms_agree') === 'on'
             };
@@ -337,21 +340,21 @@
                     throw new Error(result.message || 'Order submission failed');
                 }
 
-                // Clear order list after successful order
-                localStorage.removeItem('orderList');
+                        // Clear order list after successful order
+                        localStorage.removeItem('orderList');
 
-                // Show success message
-                showModal('Order placed successfully!');
+                        // Show success message
+                        showModal('Order placed successfully!');
 
-                // Redirect after modal is closed
-                const orderModal = document.getElementById('orderModal');
-                orderModal.addEventListener('hidden.bs.modal', function() {
-                    window.location.href = `/order-confirmation?id=${result.orderId}`;
-                });
+                        // Redirect after modal is closed
+                        const orderModal = document.getElementById('orderModal');
+                        orderModal.addEventListener('hidden.bs.modal', function() {
+                            window.location.href = `/order-confirmation?id=${result.orderId}`;
+                        });
 
             } catch (error) {
                 showModal('There was an error processing your order: ' + error.message);
-            }
+                    }
         });
 
         function showModal(message) {
@@ -372,11 +375,14 @@
 
         paymentMethodSelect.addEventListener('change', function() {
             const gcashInfo = document.getElementById('gcashInfo');
+            const gcashPhone = document.getElementById('gcashPhone');
             if (this.value === 'gcash') {
                 gcashInfo.style.display = 'block';
+                gcashPhone.setAttribute('required', 'required');
                 paymentMethodDisplay.textContent = 'GCash';
             } else {
                 gcashInfo.style.display = 'none';
+                gcashPhone.removeAttribute('required');
                 paymentMethodDisplay.textContent = 'Cash on Delivery';
             }
         });
