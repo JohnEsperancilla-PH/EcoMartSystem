@@ -401,40 +401,29 @@
                 const confirmationModal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
                 confirmationModal.hide();
 
-                // Calculate total amount
-                let totalAmount = 0;
-                orderData.items.forEach(item => {
-                    totalAmount += parseFloat(item.price) * parseInt(item.quantity);
-                });
-
-                // Create FormData
+                // Create FormData object
                 const formData = new FormData();
                 formData.append('full_name', orderData.customer.fullName);
                 formData.append('email', orderData.customer.email);
                 formData.append('contact', orderData.customer.contact);
                 formData.append('address', orderData.customer.address);
                 formData.append('payment_method', orderData.payment.method);
-                formData.append('total_amount', totalAmount.toFixed(2));
 
-                // Format items for submission
-                const itemsForSubmission = orderData.items.map(item => ({
+                // Convert items to a format that PHP can parse
+                const items = orderData.items.map(item => ({
                     id: parseInt(item.id),
                     quantity: parseInt(item.quantity),
                     price: parseFloat(item.price)
                 }));
+                formData.append('items', JSON.stringify(items));
 
-                formData.append('items', JSON.stringify(itemsForSubmission));
-
+                // Add GCash details if applicable
                 if (orderData.payment.method === 'gcash') {
                     formData.append('gcash_ref', orderData.payment.gcashRef || '');
                     formData.append('gcash_phone', orderData.payment.gcashPhone || '');
                 }
 
-                // Log the request data
-                console.log('Sending order request with data:', {
-                    formData: Object.fromEntries(formData.entries()),
-                    items: itemsForSubmission
-                });
+                console.log('Sending order with items:', items);
 
                 // Send request
                 const response = await fetch('/orders', {
@@ -442,21 +431,24 @@
                     body: formData
                 });
 
-                // Log response details
-                console.log('Response status:', response.status);
-                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                const responseData = await response.text();
+                console.log('Raw response:', responseData);
 
-                const responseText = await response.text();
-                console.log('Raw response:', responseText);
+                if (responseData.trim() === '') {
+                    throw new Error('Empty response from server');
+                }
 
                 let result;
                 try {
-                    result = JSON.parse(responseText);
-                    console.log('Parsed response:', result);
+                    result = JSON.parse(responseData);
                 } catch (e) {
-                    console.error('JSON parse error:', e);
-                    showStatusModal('Server response error. Please check the browser console and try again.');
-                    throw new Error('Failed to parse server response: ' + responseText);
+                    console.error('Failed to parse response:', e);
+                    showStatusModal('Error: Server returned invalid response');
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(result.message || `HTTP error ${response.status}`);
                 }
 
                 if (result.success) {
@@ -466,12 +458,12 @@
                         window.location.href = '/order-confirmation?id=' + result.order_id;
                     }, 2000);
                 } else {
-                    throw new Error(result.error || result.message || 'Failed to create order');
+                    throw new Error(result.message || 'Failed to create order');
                 }
 
             } catch (error) {
                 console.error('Order submission error:', error);
-                showStatusModal('Error: ' + (error.message || 'An unexpected error occurred'));
+                showStatusModal('Error: ' + error.message);
             }
         });
 
