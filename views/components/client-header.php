@@ -30,6 +30,3 @@
             localStorage.removeItem('orderList');
         });
     </script>
-</body>
-
-</html>
