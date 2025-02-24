@@ -35,6 +35,10 @@ $router->add('POST', '/create', 'AdminController@createProduct')->middleware(new
 $router->add('POST', '/update', 'AdminController@updateProduct')->middleware(new Authenticated(new Session()));
 $router->add('POST', '/delete', 'AdminController@deleteProduct')->middleware(new Authenticated(new Session()));
 
+$router->add('POST', '/update-order', 'AdminController@updateOrder')->middleware(new Authenticated(new Session()));
+$router->add('POST', '/delete-order', 'AdminController@deleteOrder')->middleware(new Authenticated(new Session()));
+
+
 // Client routes
 $router->add('GET', '/shop', 'CustomerController@shop')
     ->middleware(new Authenticated($session))

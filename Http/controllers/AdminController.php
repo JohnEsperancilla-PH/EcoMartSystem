@@ -65,6 +65,195 @@ class AdminController
         include_once DIR . '/views/admin/add-products.view.php';
     }
 
+    public function viewOrder($orderId)
+    {
+        $session = new \Core\Session();
+        if (!$session->get('authenticated') || !$session->get('user_id') || $session->get('user_role') !== 'admin') {
+            header('Location: /login');
+            exit();
+        }
+
+        // Get order details
+        $query = "SELECT 
+        o.*,
+        u.email as customer_email,
+        CONCAT(up.first_name, ' ', up.last_name) as customer_name
+        FROM Orders o
+        JOIN Users u ON o.user_id = u.user_id
+        LEFT JOIN user_profiles up ON u.user_id = up.user_id
+        WHERE o.order_id = ?";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $orderId);
+        $stmt->execute();
+        $order = $stmt->get_result()->fetch_assoc();
+
+        // Get order items
+        $itemsQuery = "SELECT 
+        oi.*,
+        p.name as product_name,
+        p.image_url
+        FROM OrderItems oi
+        JOIN Products p ON oi.product_id = p.product_id
+        WHERE oi.order_id = ?";
+
+        $stmt = $this->db->prepare($itemsQuery);
+        $stmt->bind_param("i", $orderId);
+        $stmt->execute();
+        $orderItems = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        include_once DIR . '/views/admin/order-details.view.php';
+    }
+
+    public function updateOrder()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /orders');
+            exit();
+        }
+
+        $orderId = $_POST['order_id'] ?? null;
+        $status = $_POST['status'] ?? null;
+
+        if ($orderId && $status) {
+            $stmt = $this->db->prepare("UPDATE Orders SET status = ?, updated_at = NOW() WHERE order_id = ?");
+            $stmt->bind_param("si", $status, $orderId);
+
+            if ($stmt->execute()) {
+                $_SESSION['success'] = "Order updated successfully";
+            } else {
+                $_SESSION['error'] = "Failed to update order";
+            }
+        }
+
+        header('Location: /order-history');
+        exit();
+    }
+
+    public function deleteOrder()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /orders');
+            exit();
+        }
+
+        $orderId = $_POST['order_id'] ?? null;
+
+        if ($orderId) {
+            // Start transaction
+            $this->db->begin_transaction();
+
+            try {
+                // Delete order items first
+                $stmt = $this->db->prepare("DELETE FROM OrderItems WHERE order_id = ?");
+                $stmt->bind_param("i", $orderId);
+                $stmt->execute();
+
+                // Then delete the order
+                $stmt = $this->db->prepare("DELETE FROM Orders WHERE order_id = ?");
+                $stmt->bind_param("i", $orderId);
+                $stmt->execute();
+
+                $this->db->commit();
+                $_SESSION['success'] = "Order deleted successfully";
+            } catch (Exception $e) {
+                $this->db->rollback();
+                $_SESSION['error'] = "Failed to delete order";
+            }
+        }
+
+        header('Location: /order-history');
+        exit();
+    }
+
+    private function getAllOrders($page = 1, $limit = 10)
+    {
+        $offset = ($page - 1) * $limit;
+        $where = [];
+        $params = [];
+        $types = "";
+
+        // Status filter
+        if (!empty($_GET['status'])) {
+            $where[] = "o.status = ?";
+            $params[] = $_GET['status'];
+            $types .= "s";
+        }
+
+        // Date range filter
+        $dateFilter = $_GET['date_range'] ?? 'month';
+        switch ($dateFilter) {
+            case 'today':
+                $where[] = "DATE(o.order_date) = CURDATE()";
+                break;
+            case 'week':
+                $where[] = "YEARWEEK(o.order_date) = YEARWEEK(CURDATE())";
+                break;
+            case 'month':
+                $where[] = "YEAR(o.order_date) = YEAR(CURDATE()) AND MONTH(o.order_date) = MONTH(CURDATE())";
+                break;
+            case 'year':
+                $where[] = "YEAR(o.order_date) = YEAR(CURDATE())";
+                break;
+        }
+
+        // Search filter
+        if (!empty($_GET['search'])) {
+            $where[] = "(o.order_id LIKE ? OR u.email LIKE ? OR up.first_name LIKE ? OR up.last_name LIKE ?)";
+            $searchTerm = "%" . $_GET['search'] . "%";
+            $params = array_merge($params, [$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+            $types .= "ssss";
+        }
+
+        // Build the WHERE clause
+        $whereClause = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
+
+        // Count total orders with filters
+        $countQuery = "SELECT COUNT(*) as total 
+                   FROM Orders o
+                   JOIN Users u ON o.user_id = u.user_id
+                   LEFT JOIN user_profiles up ON u.user_id = up.user_id
+                   $whereClause";
+
+        if (!empty($params)) {
+            $stmt = $this->db->prepare($countQuery);
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $totalOrders = $stmt->get_result()->fetch_assoc()['total'];
+        } else {
+            $totalOrders = $this->db->query($countQuery)->fetch_assoc()['total'];
+        }
+
+        // Get filtered orders
+        $query = "SELECT 
+        o.*,
+        u.email as customer_email,
+        CONCAT(up.first_name, ' ', up.last_name) as customer_name,
+        (SELECT COUNT(*) FROM OrderItems WHERE order_id = o.order_id) as total_items
+        FROM Orders o
+        JOIN Users u ON o.user_id = u.user_id
+        LEFT JOIN user_profiles up ON u.user_id = up.user_id
+        $whereClause
+        ORDER BY o.order_date DESC
+        LIMIT ? OFFSET ?";
+
+        // Add limit and offset to params
+        $params[] = $limit;
+        $params[] = $offset;
+        $types .= "ii";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        return [
+            'orders' => $orders,
+            'total' => $totalOrders,
+            'pages' => ceil($totalOrders / $limit)
+        ];
+    }
+
     public function orders()
     {
         $session = new \Core\Session();
@@ -73,8 +262,13 @@ class AdminController
             exit();
         }
 
-        // Get all orders with customer details
-        $orders = $this->getAllOrders();
+        // Get current page from URL parameter
+        $currentPage = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+
+        // Get orders with pagination
+        $result = $this->getAllOrders($currentPage);
+        $orders = $result['orders'];
+        $totalPages = $result['pages'];
 
         include_once DIR . '/views/admin/orders-history.view.php';
     }
@@ -232,21 +426,6 @@ class AdminController
     private function getAllCategories()
     {
         $query = "SELECT category_id, name FROM Categories ORDER BY name ASC";
-        $result = $this->db->query($query);
-        return $result->fetch_all(MYSQLI_ASSOC);
-    }
-
-    private function getAllOrders()
-    {
-        $query = "SELECT 
-            o.*,
-            u.email as customer_email,
-            CONCAT(up.first_name, ' ', up.last_name) as customer_name
-        FROM Orders o
-        JOIN Users u ON o.user_id = u.user_id
-        LEFT JOIN user_profiles up ON u.user_id = up.user_id
-        ORDER BY o.order_date DESC";
-
         $result = $this->db->query($query);
         return $result->fetch_all(MYSQLI_ASSOC);
     }
