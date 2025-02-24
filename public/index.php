@@ -31,4 +31,9 @@ try {
     $router->dispatch($method, $uri);
 } catch (Exception $e) {
     header('HTTP/1.1 500 Internal Server Error');
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage()
+    ]);
 }

@@ -7,19 +7,18 @@ use Exception;
 class Orders
 {
     private $conn;
-    private $orderItems;
 
     public function __construct($db)
     {
         $this->conn = $db;
-        $this->orderItems = new OrderItems($db);
     }
 
     public function createOrder($orderData, $items)
     {
         try {
-            // Start transaction
-            $this->conn->begin_transaction();
+            error_log("Starting order creation in model");
+            error_log("Order data: " . print_r($orderData, true));
+            error_log("Items: " . print_r($items, true));
 
             // Insert into Orders table
             $query = "INSERT INTO Orders (
@@ -33,7 +32,8 @@ class Orders
                 throw new Exception("Prepare failed: " . $this->conn->error);
             }
 
-            // Bind parameters with explicit type casting
+            error_log("Prepared statement for Orders table");
+
             $stmt->bind_param(
                 "issssdssss",
                 $orderData['user_id'],
@@ -53,6 +53,7 @@ class Orders
             }
 
             $orderId = $this->conn->insert_id;
+            error_log("Order inserted with ID: " . $orderId);
             $stmt->close();
 
             // Insert order items
@@ -66,10 +67,11 @@ class Orders
                     throw new Exception("Failed to prepare item insert: " . $this->conn->error);
                 }
 
-                // Ensure proper type casting
                 $productId = (int)$item['id'];
                 $quantity = (int)$item['quantity'];
                 $price = (float)$item['price'];
+
+                error_log("Inserting order item - Product ID: $productId, Quantity: $quantity, Price: $price");
 
                 $itemStmt->bind_param("iiid", $orderId, $productId, $quantity, $price);
 
@@ -80,15 +82,11 @@ class Orders
                 $itemStmt->close();
             }
 
-            // If we get here, commit the transaction
-            $this->conn->commit();
+            error_log("All order items inserted successfully");
             return $orderId;
         } catch (Exception $e) {
-            // Rollback on any error
-            if ($this->conn->connect_errno != 0) {
-                $this->conn->rollback();
-            }
-            error_log("Order creation failed: " . $e->getMessage());
+            error_log("Error in createOrder: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             throw $e;
         }
     }

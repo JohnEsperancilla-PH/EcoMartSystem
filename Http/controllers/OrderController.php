@@ -2,10 +2,6 @@
 
 namespace Http\Controllers;
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 use Models\Orders;
 use Models\Cart;
 use Core\Database;
@@ -35,68 +31,69 @@ class OrderController
     public function createOrder()
     {
         try {
-            // Enable error reporting for debugging
-            error_reporting(E_ALL);
-            ini_set('display_errors', 1);
-
-            // Log the incoming request
-            error_log("Received order request: " . print_r($_POST, true));
-
-            // Check authentication
+            // Get user ID from session
             $userId = $this->session->get('user_id');
             if (!$userId) {
                 throw new Exception('User not authenticated');
             }
 
-            // Validate required fields
-            if (
-                empty($_POST['full_name']) || empty($_POST['email']) ||
-                empty($_POST['contact']) || empty($_POST['address']) ||
-                empty($_POST['payment_method']) || empty($_POST['items'])
-            ) {
-                throw new Exception('Missing required fields');
+            // Get raw POST data
+            $rawData = file_get_contents('php://input');
+            error_log("Raw POST data: " . $rawData);  // Debug log
+
+            // Check if we have regular POST data
+            if (empty($rawData) && !empty($_POST)) {
+                $data = $_POST;
+                $items = json_decode($data['items'] ?? '', true);
+            } else {
+                // Try to decode JSON data
+                $data = json_decode($rawData, true);
+                $items = $data['items'] ?? [];
             }
 
-            // Parse items from the form data
-            $items = json_decode($_POST['items'], true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new Exception('Invalid items data');
+            // Validate data
+            if (empty($data)) {
+                throw new Exception('No data received');
             }
 
-            // Calculate total
-            $calculatedTotal = 0;
-            foreach ($items as $item) {
-                if (!isset($item['id'], $item['price'], $item['quantity'])) {
-                    throw new Exception('Invalid item data structure');
-                }
-                $calculatedTotal += (float)$item['price'] * (int)$item['quantity'];
-            }
+            error_log("Processed data: " . print_r($data, true));  // Debug log
 
             // Prepare order data
             $orderData = [
                 'user_id' => $userId,
-                'customer_name' => $_POST['full_name'],
-                'customer_email' => $_POST['email'],
-                'customer_contact' => $_POST['contact'],
-                'delivery_address' => $_POST['address'],
-                'total_amount' => $calculatedTotal,
+                'customer_name' => $data['full_name'] ?? '',
+                'customer_email' => $data['email'] ?? '',
+                'customer_contact' => $data['contact'] ?? '',
+                'delivery_address' => $data['address'] ?? '',
+                'total_amount' => 0, // Will be calculated from items
                 'status' => 'pending',
-                'payment_method' => $_POST['payment_method'],
-                'gcash_ref' => $_POST['gcash_ref'] ?? null,
-                'gcash_phone' => $_POST['gcash_phone'] ?? null
+                'payment_method' => $data['payment_method'] ?? 'cash',
+                'gcash_ref' => $data['gcash_ref'] ?? null,
+                'gcash_phone' => $data['gcash_phone'] ?? null
             ];
 
-            error_log("Processing order with data: " . print_r($orderData, true));
+            // Validate items
+            if (empty($items)) {
+                throw new Exception('No items in order');
+            }
+
+            // Calculate total
+            $total = 0;
+            foreach ($items as $item) {
+                $total += (float)$item['price'] * (int)$item['quantity'];
+            }
+            $orderData['total_amount'] = $total;
 
             // Begin transaction
             $this->db->getConnection()->begin_transaction();
 
             try {
-                // Create order
+                // Create the order
                 $orderId = $this->orderModel->createOrder($orderData, $items);
 
-                // Clear cart
-                $this->cartModel->clearCart($userId);
+                // Clear the cart
+                $cartId = $this->cartModel->getOrCreateCart($userId);
+                $this->cartModel->clearCart($cartId);
 
                 // Commit transaction
                 $this->db->getConnection()->commit();
@@ -114,17 +111,13 @@ class OrderController
             }
         } catch (Exception $e) {
             error_log("Order creation error: " . $e->getMessage());
+
             header('Content-Type: application/json');
+            http_response_code(500);
             echo json_encode([
                 'success' => false,
                 'message' => $e->getMessage()
             ]);
         }
-    }
-
-
-    public function confirmOrder()
-    {
-        include_once DIR . '/public/client/order-confirmation.php';
     }
 }

@@ -391,6 +391,8 @@
             modal.show();
         }
 
+        // Update the form submission handler in process-order.view.php
+        // Update the form submission handler
         document.getElementById('confirmOrderBtn').addEventListener('click', async function() {
             try {
                 if (!orderData) {
@@ -401,86 +403,75 @@
                 const confirmationModal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
                 confirmationModal.hide();
 
-                // Create FormData object
-                const formData = new FormData();
-                formData.append('full_name', orderData.customer.fullName);
-                formData.append('email', orderData.customer.email);
-                formData.append('contact', orderData.customer.contact);
-                formData.append('address', orderData.customer.address);
-                formData.append('payment_method', orderData.payment.method);
-
-                // Convert items to a format that PHP can parse
-                const items = orderData.items.map(item => ({
-                    id: parseInt(item.id),
-                    quantity: parseInt(item.quantity),
-                    price: parseFloat(item.price)
-                }));
-                formData.append('items', JSON.stringify(items));
+                // Create the request data
+                const requestData = {
+                    full_name: orderData.customer.fullName,
+                    email: orderData.customer.email,
+                    contact: orderData.customer.contact,
+                    address: orderData.customer.address,
+                    payment_method: orderData.payment.method,
+                    items: orderData.items.map(item => ({
+                        id: parseInt(item.id),
+                        quantity: parseInt(item.quantity),
+                        price: parseFloat(item.price)
+                    }))
+                };
 
                 // Add GCash details if applicable
                 if (orderData.payment.method === 'gcash') {
-                    formData.append('gcash_ref', orderData.payment.gcashRef || '');
-                    formData.append('gcash_phone', orderData.payment.gcashPhone || '');
+                    requestData.gcash_ref = orderData.payment.gcashRef;
+                    requestData.gcash_phone = orderData.payment.gcashPhone;
                 }
-
-                console.log('Sending order with items:', items);
 
                 // Send request
                 const response = await fetch('/orders', {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
                 });
 
-                const responseData = await response.text();
-                console.log('Raw response:', responseData);
-
-                if (responseData.trim() === '') {
-                    throw new Error('Empty response from server');
-                }
-
-                let result;
-                try {
-                    result = JSON.parse(responseData);
-                } catch (e) {
-                    console.error('Failed to parse response:', e);
-                    showStatusModal('Error: Server returned invalid response');
-                    return;
-                }
+                const result = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(result.message || `HTTP error ${response.status}`);
-                }
-
-                if (result.success) {
-                    localStorage.removeItem('orderList');
-                    showStatusModal('Order placed successfully! Redirecting...');
-                    setTimeout(() => {
-                        window.location.href = '/order-confirmation?id=' + result.order_id;
-                    }, 2000);
-                } else {
                     throw new Error(result.message || 'Failed to create order');
                 }
 
+                if (result.success) {
+                    showStatusModal('Order placed successfully!');
+                    localStorage.removeItem('orderList');
+
+                    const statusModalBody = document.getElementById('statusModalBody');
+                    statusModalBody.innerHTML = `
+                <div class="alert alert-success">
+                    <h4>Order Placed Successfully!</h4>
+                    <p>Order ID: ${result.order_id}</p>
+                    <p>Thank you for your purchase. We will process your order shortly.</p>
+                </div>
+            `;
+
+                    const statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
+                    statusModal.show();
+
+                    setTimeout(() => {
+                        window.location.href = '/shop';
+                    }, 3000);
+                } else {
+                    throw new Error(result.message || 'Failed to create order');
+                }
             } catch (error) {
                 console.error('Order submission error:', error);
                 showStatusModal('Error: ' + error.message);
             }
         });
 
-        function createInput(name, value) {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = name;
-            input.value = value || '';
-            return input;
-        }
-
-        // Update the showStatusModal function to be more informative
+        // Update the showStatusModal function
         function showStatusModal(message) {
             const modalElement = document.getElementById('statusModal');
             const modalBody = document.getElementById('statusModalBody');
 
-            // Format error messages
+            // Format the message based on type
             if (message.startsWith('Error:')) {
                 modalBody.innerHTML = `
             <div class="alert alert-danger">
@@ -497,6 +488,14 @@
 
             const modal = new bootstrap.Modal(modalElement);
             modal.show();
+        }
+
+        function createInput(name, value) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = value || '';
+            return input;
         }
 
         // Payment method handling
