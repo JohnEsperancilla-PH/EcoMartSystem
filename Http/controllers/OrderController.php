@@ -1,6 +1,6 @@
 <?php
 
-namespace Http\Controllers;
+namespace Http\controllers;
 
 use Models\Orders;
 use Models\Cart;
@@ -114,10 +114,15 @@ class OrderController
 
             header('Content-Type: application/json');
             http_response_code(500);
-            echo json_encode([
+            
+            $response = [
                 'success' => false,
-                'message' => $e->getMessage()
-            ]);
+                'message' => isset($e) ? $e->getMessage() : 'Unknown error occurred'
+            ];
+            
+            // Ensure proper JSON output
+            echo json_encode($response);
+            exit;             
         }
     }
 }

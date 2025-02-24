@@ -423,7 +423,6 @@
                     requestData.gcash_phone = orderData.payment.gcashPhone;
                 }
 
-                // Send request
                 const response = await fetch('/orders', {
                     method: 'POST',
                     headers: {
@@ -432,7 +431,16 @@
                     body: JSON.stringify(requestData)
                 });
 
-                const result = await response.json();
+                const textResponse = await response.text(); // Get the raw response
+                let result;
+
+                try {
+                    result = textResponse ? JSON.parse(textResponse) : {}; // Check before parsing
+                } catch (error) {
+                    console.error('Failed to parse server response:', error);
+                    showStatusModal('Error processing order data. Please try again.');
+                    return;
+                }
 
                 if (!response.ok) {
                     throw new Error(result.message || 'Failed to create order');
@@ -505,14 +513,13 @@
         paymentMethodSelect.addEventListener('change', function() {
             const gcashInfo = document.getElementById('gcashInfo');
             const gcashPhone = document.getElementById('gcashPhone');
+
             if (this.value === 'gcash') {
                 gcashInfo.style.display = 'block';
                 gcashPhone.setAttribute('required', 'required');
                 paymentMethodDisplay.textContent = 'GCash';
             } else {
                 gcashInfo.style.display = 'none';
-                gcashPhone.removeAttribute('required');
-                paymentMethodDisplay.gcashInfo.style.display = 'none';
                 gcashPhone.removeAttribute('required');
                 paymentMethodDisplay.textContent = 'Cash on Delivery';
             }
