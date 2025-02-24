@@ -83,7 +83,7 @@
                                                     </div>
                                                     <div class="flex-grow-1 ms-2">
                                                         <h6 class="mb-0"><?php echo htmlspecialchars($order['customer_name']); ?></h6>
-                                                        <small class="text-muted"><?php echo htmlspecialchars($order['email']); ?></small>
+                                                        <small class="text-muted"><?php echo htmlspecialchars($order['customer_email']); ?></small>
                                                     </div>
                                                 </div>
                                             </td>
