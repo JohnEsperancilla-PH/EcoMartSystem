@@ -120,46 +120,47 @@ class AuthController
             try {
                 $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
                 $password = $_POST['password'] ?? '';
-                $role = $_POST['role'] ?? '';
-
+    
                 if (!$email) {
                     $this->session->set('email_error', 'Please enter a valid email address');
                     header('Location: /login');
                     exit();
                 }
-
-                $stmt = $this->db->prepare("SELECT user_id, password, role, email FROM users WHERE email = ? AND role = ?");
+    
+                // Fetch user data from the database
+                $stmt = $this->db->prepare("SELECT user_id, password, role FROM users WHERE email = ?");
                 if (!$stmt) {
                     throw new Exception('Database error occurred');
                 }
-
-                $stmt->bind_param("ss", $email, $role);
+    
+                $stmt->bind_param("s", $email);
                 $stmt->execute();
                 $result = $stmt->get_result();
                 $user = $result->fetch_assoc();
                 $stmt->close();
-
+    
                 if (!$user) {
-                    $this->session->set('login_error', 'Invalid email or role');
+                    $this->session->set('login_error', 'Invalid email or password');
                     header('Location: /login');
                     exit();
                 }
-
+    
+                // Verify password
                 if (!password_verify($password, $user['password'])) {
                     $this->session->set('password_error', 'Invalid password');
                     header('Location: /login');
                     exit();
                 }
-
+    
                 // Get or create cart for user
                 $cartId = $this->cart->getOrCreateCart($user['user_id']);
-
+    
                 // Set session variables
                 $this->session->set('user_id', $user['user_id']);
-                $this->session->set('user_role', $user['role']);
+                $this->session->set('user_role', $user['role']); // Automatically assign role
                 $this->session->set('cart_id', $cartId);
                 $this->session->set('authenticated', true);
-
+    
                 // Redirect based on role
                 if ($user['role'] === 'admin') {
                     header('Location: /dashboard');
@@ -174,7 +175,7 @@ class AuthController
                 exit();
             }
         }
-
+    
         require_once DIR . '/views/auth/login.view.php';
     }
 

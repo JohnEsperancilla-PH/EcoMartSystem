@@ -99,9 +99,18 @@
                                             <td>
                                                 <div class="d-flex flex-column">
                                                     <span class="fw-medium"><?php echo htmlspecialchars($order['payment_method']); ?></span>
-                                                    <?php if ($order['payment_method'] === 'gcash'): ?>
-                                                        <small class="text-muted">Ref: <?php echo htmlspecialchars($order['gcash_ref']); ?></small>
-                                                        <small class="text-muted">Phone: <?php echo htmlspecialchars($order['gcash_phone']); ?></small>
+                                                    
+                                                    <?php 
+                                                    $paymentMethod = strtolower(trim($order['payment_method'])); 
+                                                    
+                                                    if ($paymentMethod === 'gcash'): ?>
+                                                        <small class="text-muted">GCash Ref: <?php echo isset($order['gcash_ref']) ? htmlspecialchars($order['gcash_ref']) : 'N/A'; ?></small>
+                                                        <small class="text-muted">Phone: <?php echo isset($order['gcash_phone']) ? htmlspecialchars($order['gcash_phone']) : 'N/A'; ?></small>
+                                                    <?php elseif ($paymentMethod === 'maya'): ?>  
+                                                        <small class="text-muted">Maya Ref: <?php echo isset($order['maya_ref']) ? 
+                                                        htmlspecialchars($order['maya_ref']) : 'N/A'; ?></small>  
+                                                        <small class="text-muted">Phone: <?php echo isset($order['maya_phone']) ? 
+                                                        htmlspecialchars($order['maya_phone']) : 'N/A'; ?></small>  
                                                     <?php endif; ?>
                                                 </div>
                                             </td>

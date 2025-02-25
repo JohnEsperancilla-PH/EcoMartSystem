@@ -7,7 +7,8 @@
             <div class="d-flex flex-nowrap overflow-auto pb-3 scrollbar-overlay">
                 <div class="d-flex gap-2 pe-3">
                     <?php foreach ($categories as $category): ?>
-                        <a href="#" class="btn btn-outline-primary rounded-pill px-3 d-flex align-items-center shadow-hover">
+                        <a href="#" class="btn btn-outline-primary rounded-pill px-3 d-flex align-items-center shadow-hover"
+                        style="border-color: #bb3636; color: #bb3636;">
                             <i class="fas fa-tag me-2"></i><?= $category['name'] ?>
                         </a>
                     <?php endforeach; ?>
@@ -26,7 +27,8 @@
                     </a>
                     <?php foreach ($categories as $category): ?>
                         <a href="/shop?category=<?= urlencode($category['name']) ?>"
-                            class="list-group-item list-group-item-action d-flex align-items-center rounded-3 p-3 <?= $selectedCategory == $category['name'] ? 'active' : '' ?>">
+                        class="list-group-item list-group-item-action d-flex align-items-center rounded-3 p-3 <?= $selectedCategory == $category['name'] ? 'active' : '' ?>"
+                        style="border-color: #bb3636; color: #bb3636;">
                             <i class="fas fa-tag me-2 text-muted"></i>
                             <?= htmlspecialchars($category['name']) ?>
                         </a>

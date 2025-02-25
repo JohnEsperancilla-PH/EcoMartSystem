@@ -1,4 +1,4 @@
-        <footer class="text-white py-4 mt-5">
+        <footer class="footer text-black py-4 mt-5">
             <div class="container">
                 <div class="row">
                     <div class="col-md-6">
@@ -15,11 +15,11 @@
                     <div class="col-md-6 text-md-end mt-4 mt-md-0">
                         <h6>Quick Links</h6>
                         <ul class="list-unstyled">
-                            <li><a href="#" class="text-white text-decoration-none">My Account</a></li>
-                            <li><a href="branches.php" class="text-white text-decoration-none">Store Locator</a></li>
-                            <li><a href="contact.php" class="text-white text-decoration-none">Contact Us</a></li>
-                            <li><a href="privacy-policy.php" class="text-white text-decoration-none">Privacy Policy</a></li>
-                            <li><a href="terms.php" class="text-white text-decoration-none">Terms of Use</a></li>
+                            <li><a href="#" class="text-black text-decoration-none">My Account</a></li>
+                            <li><a href="branches.php" class="text-black text-decoration-none">Store Locator</a></li>
+                            <li><a href="contact.php" class="text-black text-decoration-none">Contact Us</a></li>
+                            <li><a href="privacy-policy.php" class="text-black text-decoration-none">Privacy Policy</a></li>
+                            <li><a href="terms.php" class="text-black text-decoration-none">Terms of Use</a></li>
                         </ul>
                     </div>
                 </div>

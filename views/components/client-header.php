@@ -12,7 +12,9 @@
 <body>
     <nav class="navbar navbar-expand-lg sticky-top" style="z-index: 1030;">
         <div class="container">
-            <a class="navbar-brand text-white fw-bold" href="/shop">EcoMart</a>
+        <a class="navbar-brand" href="/shop">
+            <img src="..\images\ecomart-logo.png" alt="EcoMart Logo" height="40">
+        </a>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link text-white" href="/shop">Shop</a></li>

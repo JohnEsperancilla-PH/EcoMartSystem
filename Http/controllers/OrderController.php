@@ -69,7 +69,9 @@ class OrderController
                 'status' => 'pending',
                 'payment_method' => $data['payment_method'] ?? 'cash',
                 'gcash_ref' => $data['gcash_ref'] ?? null,
-                'gcash_phone' => $data['gcash_phone'] ?? null
+                'gcash_phone' => $data['gcash_phone'] ?? null,
+                'maya_ref' => $data['maya_ref'] ?? null,
+                'maya_phone' => $data['maya_phone'] ?? null,
             ];
 
             // Validate items

@@ -67,6 +67,7 @@
                         <option value="">Select payment method</option>
                         <option value="cash">Cash on Delivery</option>
                         <option value="gcash">GCash</option>
+                        <option value="maya">Maya</option>
                     </select>
                     <div class="invalid-feedback">Please select a payment method</div>
                 </div>
@@ -88,11 +89,24 @@
                         </div>
                         <div class="invalid-feedback">Please enter a valid Philippine mobile number</div>
                     </div>
-                    <div class="mt-3">
-                        <p class="mb-2">Scan QR Code to pay:</p>
-                        <div class="text-center">
-                            <img src="/assets/images/gcash-qr.png" alt="GCash QR Code" class="img-fluid" style="max-width: 200px;">
+                </div>
+
+                <div id="mayaInfo" class="mb-3" style="display: none;">
+                    <div class="mb-3">
+                        <p><strong>Store Maya Account Number:</strong> 09171234567</p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="mayaRef" class="form-label">Maya Reference Number</label>
+                        <input type="text" class="form-control" id="mayaRef" name="maya_ref">
+                        <div class="invalid-feedback">Please enter a valid Maya reference number (10-13 digits)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="mayaPhone" class="form-label">Maya Customer Phone Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text">+63</span>
+                            <input type="tel" class="form-control" id="mayaPhone" name="maya_phone" pattern="^9[0-9]{9}$" placeholder="9XXXXXXXXX">
                         </div>
+                        <div class="invalid-feedback">Please enter a valid Philippine mobile number</div>
                     </div>
                 </div>
             </div>
@@ -344,7 +358,9 @@
                 payment: {
                     method: formData.get('payment_method'),
                     gcashRef: formData.get('gcash_ref') || null,
-                    gcashPhone: formData.get('gcash_phone') || null
+                    gcashPhone: formData.get('gcash_phone') || null,
+                    mayaRef: formData.get('maya_ref') || null,
+                    mayaPhone: formData.get('maya_phone') || null
                 },
                 items: orderList.map(item => ({
                     id: item.id,
@@ -382,7 +398,7 @@
 
             summaryHtml += `
                 </ul>
-                <p><strong>Payment Method:</strong> ${data.payment.method === 'gcash' ? 'GCash' : 'Cash on Delivery'}</p>
+                <p><strong>Payment Method:</strong> ${data.payment.method === 'gcash' ? 'GCash' : data.payment.method === 'maya' ? 'Maya' : 'Cash on Delivery'}</p>
                 <p><strong>Total Amount:</strong> ${grandTotalElement.textContent}</p>
             </div>
         `;
@@ -421,6 +437,12 @@
                 if (orderData.payment.method === 'gcash') {
                     requestData.gcash_ref = orderData.payment.gcashRef;
                     requestData.gcash_phone = orderData.payment.gcashPhone;
+                }
+
+                // Add Maya details if applicable
+                if (orderData.payment.method === 'maya') {
+                    requestData.maya_ref = orderData.payment.mayaRef;
+                    requestData.maya_phone = orderData.payment.mayaPhone;
                 }
 
                 const response = await fetch('/orders', {
@@ -513,20 +535,25 @@
         paymentMethodSelect.addEventListener('change', function() {
             const gcashInfo = document.getElementById('gcashInfo');
             const gcashPhone = document.getElementById('gcashPhone');
+            const mayaInfo = document.getElementById('mayaInfo');
+            const mayaPhone = document.getElementById('mayaPhone');
+
+            gcashInfo.style.display = this.value === 'gcash' ? 'block' : 'none';
+            mayaInfo.style.display = this.value === 'maya' ? 'block' : 'none';
 
             if (this.value === 'gcash') {
-                gcashInfo.style.display = 'block';
                 gcashPhone.setAttribute('required', 'required');
+                mayaPhone.removeAttribute('required');
                 paymentMethodDisplay.textContent = 'GCash';
-            } else {
-                gcashInfo.style.display = 'none';
+            } else if (this.value === 'maya') {
+                mayaPhone.setAttribute('required', 'required');
                 gcashPhone.removeAttribute('required');
-                paymentMethodDisplay.textContent = 'Cash on Delivery';
+                paymentMethodDisplay.textContent = 'Maya';
             }
         });
 
         // Initialize payment method display based on selected value
-        paymentMethodDisplay.textContent = paymentMethodSelect.value === 'gcash' ? 'GCash' : 'Cash on Delivery';
+        paymentMethodDisplay.textContent = paymentMethodSelect.value === 'gcash' ? 'GCash' : 'maya' ? 'Maya' : 'Cash on Delivery';
 
         // Update delivery info display when address is entered
         document.getElementById('address').addEventListener('input', function() {
@@ -588,6 +615,37 @@
 
                 // Validate phone number format
                 if (!/^9\d{9}$/.test(gcashPhone)) {
+                    showStatusModal('Invalid phone number format');
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Validate Maya details when required
+        function validateMayaDetails() {
+            if (paymentMethodSelect.value === 'maya') {
+                const mayaRef = document.getElementById('mayaRef').value;
+                const mayaPhone = document.getElementById('mayaPhone').value;
+
+                if (!mayaRef) {
+                    showStatusModal('Please enter Maya reference number');
+                    return false;
+                }
+
+                if (!mayaPhone) {
+                    showStatusModal('Please enter Maya phone number');
+                    return false;
+                }
+
+                // Validate Maya reference number format (10-13 digits)
+                if (!/^\d{10,13}$/.test(mayaRef)) {
+                    showStatusModal('Invalid Maya reference number format');
+                    return false;
+                }
+
+                // Validate phone number format
+                if (!/^9\d{9}$/.test(mayaPhone)) {
                     showStatusModal('Invalid phone number format');
                     return false;
                 }

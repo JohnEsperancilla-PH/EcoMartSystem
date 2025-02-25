@@ -24,8 +24,8 @@ class Orders
             $query = "INSERT INTO Orders (
                 user_id, customer_name, customer_email, customer_contact,
                 delivery_address, total_amount, status, payment_method,
-                gcash_ref, gcash_phone, order_date, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+                gcash_ref, gcash_phone, maya_ref, maya_phone, order_date, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";                   
 
             $stmt = $this->conn->prepare($query);
             if (!$stmt) {
@@ -35,7 +35,7 @@ class Orders
             error_log("Prepared statement for Orders table");
 
             $stmt->bind_param(
-                "issssdssss",
+                "issssdssssss",
                 $orderData['user_id'],
                 $orderData['customer_name'],
                 $orderData['customer_email'],
@@ -45,7 +45,9 @@ class Orders
                 $orderData['status'],
                 $orderData['payment_method'],
                 $orderData['gcash_ref'],
-                $orderData['gcash_phone']
+                $orderData['gcash_phone'],
+                $orderData['maya_ref'],
+                $orderData['maya_phone']
             );
 
             if (!$stmt->execute()) {

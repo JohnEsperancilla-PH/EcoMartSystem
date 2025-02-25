@@ -38,17 +38,6 @@
                         <?php unset($_SESSION['password_error']); ?>
                     <?php endif; ?>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Role</label>
-                    <select name="role" class="form-control <?php echo isset($_SESSION['login_error']) ? 'is-invalid' : ''; ?>" required>
-                        <option value="admin">Admin</option>
-                        <option value="customer">Customer</option>
-                    </select>
-                    <?php if (isset($_SESSION['login_error'])): ?>
-                        <div class="invalid-feedback"><?php echo htmlspecialchars($_SESSION['login_error']); ?></div>
-                        <?php unset($_SESSION['login_error']); ?>
-                    <?php endif; ?>
-                </div>
                 <button type="submit" class="btn btn-danger w-100">Login</button>
                 <p class="text-center mt-3">
                     Don't have an account? <a href="/register" class="text-danger">Sign Up</a>

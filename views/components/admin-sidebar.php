@@ -1,7 +1,9 @@
 <div class="sidebar bg-dark text-white">
     <div class="sidebar-content">
         <div class="px-3 py-4">
-            <h3 class="text-white mb-3 text-center">EcoMart</h3>
+            <a class="navbar-brand" href="/shop">
+                <img src="..\images\ecomart-logo.png" alt="EcoMart Logo" height="40">
+            </a>
             <hr class="border-secondary">
         </div>
 

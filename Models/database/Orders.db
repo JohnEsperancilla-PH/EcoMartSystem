@@ -10,6 +10,8 @@ CREATE TABLE Orders (
     payment_method VARCHAR(50) NOT NULL,
     gcash_ref VARCHAR(20),
     gcash_phone VARCHAR(15),
+    maya_ref VARCHAR(20);
+    maya_phone VARCHAR(15);
     order_date DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES Users(user_id)
