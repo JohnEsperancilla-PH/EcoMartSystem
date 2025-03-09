@@ -52,6 +52,7 @@
                                         <th class="border-0">Order ID</th>
                                         <th class="border-0">User ID</th>
                                         <th class="border-0">Customer Info</th>
+                                        <th class="border-0">Products Ordered</th>
                                         <th class="border-0">Contact Details</th>
                                         <th class="border-0">Delivery Address</th>
                                         <th class="border-0">Payment Details</th>
@@ -83,6 +84,22 @@
                                                         <small class="text-muted"><?php echo htmlspecialchars($order['customer_email']); ?></small>
                                                     </div>
                                                 </div>
+                                            </td>
+                                            <td>
+                                                <ul>
+                                                    <?php
+                                                    $itemsQuery = "SELECT p.name 
+                                                                   FROM OrderItems oi
+                                                                   JOIN Products p ON oi.product_id = p.product_id
+                                                                   WHERE oi.order_id = ?";
+                                                    $stmt = $this->db->prepare($itemsQuery);
+                                                    $stmt->bind_param("i", $order['order_id']);
+                                                    $stmt->execute();
+                                                    $itemsResult = $stmt->get_result();
+                                                    while ($item = $itemsResult->fetch_assoc()): ?>
+                                                        <li><?php echo htmlspecialchars($item['name']); ?></li>
+                                                    <?php endwhile; ?>
+                                                </ul>
                                             </td>
                                             <td>
                                                 <div class="d-flex flex-column">
@@ -139,7 +156,6 @@
                                                     <small class="text-muted">Updated:<br><?php echo date('M d, Y h:i A', strtotime($order['updated_at'])); ?></small>
                                                 </div>
                                             </td>
-                                            <!-- Inside your orders table, replace the existing action column with this: -->
                                             <td>
                                                 <div class="dropdown">
                                                     <button class="btn btn-sm btn-icon" data-bs-toggle="dropdown">
